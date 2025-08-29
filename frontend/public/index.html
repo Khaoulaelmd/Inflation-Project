@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plateforme nationale – Bureau de gestion d'Inflation</title>
+  <script src="assets/js/i18n.js"></script>
+
+  <!-- Google Font Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" rel="stylesheet"/>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --color-bg: #ECF0F1;              /* fond global */
+      --color-card: #FFFFFF;            /* fond cartes */
+      --color-primary: #394b76;         /* texte principal & sidebar */
+      --color-secondary: #16A085;       /* boutons et highlights */
+      --color-accent: #615798;          /* accents (sparklines) */
+      --color-muted: #7F8C8D;           /* textes secondaires */
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--color-bg);
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="%23E2E8F0" stroke-width="0.5" opacity="0.3"/></pattern><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23CBD5E1" opacity="0.2"/></pattern></defs><rect width="100%" height="100%" fill="%23ECF0F1"/><rect width="100%" height="100%" fill="url(%23grid)"/><rect width="100%" height="100%" fill="url(%23dots)"/><g opacity="0.1"><circle cx="200" cy="150" r="80" fill="%2316A085"/><circle cx="1000" cy="300" r="120" fill="%23615798"/><circle cx="300" cy="600" r="100" fill="%23394b76"/><circle cx="900" cy="650" r="60" fill="%2316A085"/></g></svg>');
+      background-attachment: fixed;
+      background-size: cover;
+      color: var(--color-primary);
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(236, 240, 241, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+      z-index: -1;
+    }
+    .card {
+      background-color: var(--color-card);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+    .sidebar {
+  background-color: var(--color-primary);
+}
+
+/* ← Règle à METTRE À JOUR ICI */
+.sidebar .nav-item {
+  display: block;       /* force le plein conteneur */
+  width: 100%;          /* 100% de la largeur parent */
+  text-align: left;     /* alignement à gauche */
+  padding: 0.75rem 1.5rem;
+  color: #fff;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.sidebar .nav-item:hover {
+  background-color: var(--color-secondary);
+}
+
+.sidebar .nav-item.active {
+  background-color: var(--color-secondary);
+  border-left: 4px solid var(--color-accent);
+}
+
+    .text-muted    { color: var(--color-muted); }
+    .text-secondary{ color: var(--color-secondary); }
+    .text-accent   { color: var(--color-accent); }
+    .bg-primary    { background-color: var(--color-primary); }
+    .bg-secondary  { background-color: var(--color-secondary); }
+    .hover\:bg-secondary-dark:hover { background-color: #12856e; } /* un peu plus foncé */
+
+    /* top nav offset for main layout */
+    .top-offset { padding-top: 56px; }
+  </style>
+</head>
+<body class="flex h-screen antialiased top-offset">
+
+  <!-- Top NAV (cohérent) -->
+
+
+  <div class="fixed top-4 right-4 z-50" id="langSwitcher"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 sidebar flex flex-col">
+    <h1 class="px-6 py-5 text-xl font-bold border-b border-white/20 text-white" data-i18n="app_title">Bureau de Gestion d'Inflation</h1>
+    <nav class="flex-1 py-4">
+      <button class="nav-item active" data-section="dashboard" data-i18n="nav_dashboard">Tableau de bord</button>
+      <button class="nav-item" data-section="forecast" data-i18n="nav_forecast">Prévisions</button>
+      <button class="nav-item" data-section="reports" data-i18n="nav_reports">Rapports</button>
+      <button class="nav-item" data-section="recommendations" data-i18n="nav_recommendations">Recommandations</button>
+      <button class="nav-item" data-section="causale" data-i18n="nav_causal">Analyse causale</button>
+      <button class="nav-item" data-section="feedback" data-i18n="nav_feedback">Feedback</button>
+      <button class="nav-item" data-section="users" data-i18n="nav_users">Utilisateurs</button>
+      <button class="nav-item" data-section="qualite" data-i18n="nav_quality">Qualité données</button>
+      <button class="nav-item" data-section="alerts" data-i18n="nav_alerts">Alertes régionales</button>
+    </nav>
+    <footer class="px-6 py-3 text-xs text-white/70 border-t border-white/20">© 2025 – Prévision Intelligente</footer>
+  </aside>
+
+  <!-- CONTENU PRINCIPAL -->
+  <main id="mainContent" class="flex-1 overflow-y-auto p-6">
+
+    <!-- Header avec informations utilisateur -->
+    <div id="userHeader" class="bg-white/90 backdrop-blur-md rounded-lg shadow-lg p-4 mb-6 flex justify-between items-center border border-white/50">
+      <div class="flex items-center space-x-4">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+          <i class="fas fa-user text-white"></i>
+        </div>
+        <div>
+          <div class="font-semibold text-gray-800" id="userEmail">Chargement...</div>
+          <div class="text-sm text-gray-600">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" id="userRole">
+              <i class="fas fa-user-tag mr-1"></i>
+              Chargement...
+            </span>
+          </div>
+        </div>
+      </div>
+      <button 
+        id="logoutBtn" 
+        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+        onclick="logout()"
+      >
+        <i class="fas fa-sign-out-alt"></i>
+        <span data-i18n="logout">Déconnexion</span>
+      </button>
+    </div>
+
+    <!-- ===== SECTION : DASHBOARD ===== -->
+    <section id="dashboard">
+      <h2 class="text-3xl font-semibold mb-6" data-i18n="dashboard_title">Tableau de bord</h2>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- M2 -->
+        <div class="card flex justify-between items-center" data-indicator="m2">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-dollar-sign text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Masse monétaire (% PIB)</div>
+              <div id="kpi-m2" class="text-xl font-semibold">68.4%</div>
+              <div id="kpi-m2-diff" class="text-sm text-accent">+1.2%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-m2" class="w-20 h-6"></canvas>
+        </div>
+        <!-- Exchange -->
+        <div class="card flex justify-between items-center" data-indicator="exchange">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-exchange-alt text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Taux de change (indice)</div>
+              <div id="kpi-exchange" class="text-xl font-semibold">112.7</div>
+              <div id="kpi-exchange-diff" class="text-sm text-muted">Stable</div>
+            </div>
+          </div>
+          <canvas id="sparkline-exchange" class="w-20 h-6"></canvas>
+        </div>
+        <!-- CPI -->
+        <div class="card flex justify-between items-center" data-indicator="cpi">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-chart-bar text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Indice prix à la consommation</div>
+              <div id="kpi-cpi" class="text-xl font-semibold">109.6</div>
+              <div id="kpi-cpi-diff" class="text-sm text-accent">+0.4%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-cpi" class="w-20 h-6"></canvas>
+        </div>
+        <!-- Unemployment -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-users text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Taux de chômage</div>
+              <div id="kpi-unemployment" class="text-xl font-semibold">9.8%</div>
+              <div id="kpi-unemployment-diff" class="text-sm text-accent">−0.2 pt</div>
+            </div>
+          </div>
+          <canvas id="sparkline-unemployment" class="w-20 h-6"></canvas>
+        </div>
+        <!-- GDP -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-chart-line text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Croissance du PIB</div>
+              <div id="kpi-gdp" class="text-xl font-semibold">+3.1%</div>
+              <div id="kpi-gdp-diff" class="text-sm text-muted">Stable</div>
+            </div>
+          </div>
+          <canvas id="sparkline-gdp" class="w-20 h-6"></canvas>
+        </div>
+        <!-- Real Rate -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-percent text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Taux d'intérêt réel</div>
+              <div id="kpi-realRate" class="text-xl font-semibold">1.1%</div>
+              <div id="kpi-realRate-diff" class="text-sm text-muted">Inchangé</div>
+            </div>
+          </div>
+          <canvas id="sparkline-realRate" class="w-20 h-6"></canvas>
+        </div>
+        <!-- Savings -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-wallet text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Épargne brute</div>
+              <div id="kpi-savings" class="text-xl font-semibold">17.6%</div>
+              <div id="kpi-savings-diff" class="text-sm text-muted">+0.1%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-savings" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Indice prix alimentaires -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-utensils text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Prix alimentaires</div>
+              <div id="kpi-food" class="text-xl font-semibold">125.3</div>
+              <div id="kpi-food-diff" class="text-sm text-accent">+0.8%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-food" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Pétrole Brent -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-gas-pump text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Pétrole Brent ($/bbl)</div>
+              <div id="kpi-oil" class="text-xl font-semibold">78.50</div>
+              <div id="kpi-oil-diff" class="text-sm text-accent">+2.1%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-oil" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Gaz naturel US -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-fire text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Gaz naturel US ($/MMBtu)</div>
+              <div id="kpi-gas-us" class="text-xl font-semibold">2.85</div>
+              <div id="kpi-gas-us-diff" class="text-sm text-muted">-0.3%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-gas-us" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Gaz naturel Europe -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-fire text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Gaz Europe (€/MWh)</div>
+              <div id="kpi-gas-eu" class="text-xl font-semibold">45.20</div>
+              <div id="kpi-gas-eu-diff" class="text-sm text-accent">+1.5%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-gas-eu" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Gaz naturel liquéfié Japon -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-fire text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">GNL Japon ($/MMBtu)</div>
+              <div id="kpi-gas-jp" class="text-xl font-semibold">12.80</div>
+              <div id="kpi-gas-jp-diff" class="text-sm text-muted">+0.7%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-gas-jp" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Maïs -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-seedling text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Maïs ($/boisseau)</div>
+              <div id="kpi-corn" class="text-xl font-semibold">4.25</div>
+              <div id="kpi-corn-diff" class="text-sm text-accent">-0.5%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-corn" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Riz thaï -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-seedling text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Riz thaï ($/tonne)</div>
+              <div id="kpi-rice" class="text-xl font-semibold">580</div>
+              <div id="kpi-rice-diff" class="text-sm text-accent">+0.9%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-rice" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Huile de soja -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-seedling text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Huile soja ($/tonne)</div>
+              <div id="kpi-soybean" class="text-xl font-semibold">980</div>
+              <div id="kpi-soybean-diff" class="text-sm text-accent">+1.2%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-soybean" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Huile de palme -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-seedling text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Huile palme ($/tonne)</div>
+              <div id="kpi-palm" class="text-xl font-semibold">850</div>
+              <div id="kpi-palm-diff" class="text-sm text-accent">+0.6%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-palm" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Huile de tournesol -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-seedling text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Huile tournesol ($/tonne)</div>
+              <div id="kpi-sunflower" class="text-xl font-semibold">1200</div>
+              <div id="kpi-sunflower-diff" class="text-sm text-accent">+0.8%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-sunflower" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Cuivre -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-cog text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Cuivre ($/tonne)</div>
+              <div id="kpi-copper" class="text-xl font-semibold">8,450</div>
+              <div id="kpi-copper-diff" class="text-sm text-accent">+1.8%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-copper" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Aluminium -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-cog text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Aluminium ($/tonne)</div>
+              <div id="kpi-aluminum" class="text-xl font-semibold">2,180</div>
+              <div id="kpi-aluminum-diff" class="text-sm text-accent">+0.4%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-aluminum" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Minerai de fer -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-cog text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Minerai fer ($/tonne)</div>
+              <div id="kpi-iron" class="text-xl font-semibold">95.50</div>
+              <div id="kpi-iron-diff" class="text-sm text-accent">-0.2%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-iron" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Zinc -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-cog text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Zinc ($/tonne)</div>
+              <div id="kpi-zinc" class="text-xl font-semibold">2,650</div>
+              <div id="kpi-zinc-diff" class="text-sm text-accent">+0.9%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-zinc" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Nickel -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-cog text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Nickel ($/tonne)</div>
+              <div id="kpi-nickel" class="text-xl font-semibold">16,800</div>
+              <div id="kpi-nickel-diff" class="text-sm text-accent">+2.3%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-nickel" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Indice prix production -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-industry text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Prix production</div>
+              <div id="kpi-ppi" class="text-xl font-semibold">115.2</div>
+              <div id="kpi-ppi-diff" class="text-sm text-accent">+0.6%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-ppi" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Taux chômage U6 -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-users text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Chômage U6 (US)</div>
+              <div id="kpi-u6" class="text-xl font-semibold">7.2%</div>
+              <div id="kpi-u6-diff" class="text-sm text-accent">-0.1 pt</div>
+            </div>
+          </div>
+          <canvas id="sparkline-u6" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Croissance salariale US -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-dollar-sign text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Croissance salaires US</div>
+              <div id="kpi-wages" class="text-xl font-semibold">4.1%</div>
+              <div id="kpi-wages-diff" class="text-sm text-accent">+0.2%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-wages" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Liquidité internationale USD -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-globe text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Liquidité USD (T$)</div>
+              <div id="kpi-liquidity" class="text-xl font-semibold">21.8</div>
+              <div id="kpi-liquidity-diff" class="text-sm text-accent">+0.5%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-liquidity" class="w-20 h-6"></canvas>
+        </div>
+        
+        <!-- Inflation -->
+        <div class="card flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-chart-line text-3xl text-accent"></i>
+            <div>
+              <div class="text-xs text-muted">Inflation globale</div>
+              <div id="kpi-inflation" class="text-xl font-semibold">2.3%</div>
+              <div id="kpi-inflation-diff" class="text-sm text-accent">+0.1%</div>
+            </div>
+          </div>
+          <canvas id="sparkline-inflation" class="w-20 h-6"></canvas>
+        </div>
+      </div>
+
+      <!-- Comparaison multi-indicateurs (hauteur réduite) -->
+      <div class="card mb-8">
+        <h3 class="text-lg font-semibold mb-4">Comparaison multi-indicateurs</h3>
+        <canvas id="multiChart" height="150"></canvas>
+      </div>
+
+      <!-- Évolution et actualités côte-à-côte -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Sélection & chart unique -->
+        <div class="card">
+          <div class="flex space-x-4 mb-4">
+            <div class="w-1/2">
+              <label for="selectIndicator" class="block text-sm text-muted">Indicateur</label>
+                             <select id="selectIndicator" class="mt-1 border rounded px-3 py-2 text-sm w-full">
+                 <option value="m2">Masse monétaire</option>
+                 <option value="exchange">Taux de change</option>
+                 <option value="cpi">CPI</option>
+                 <option value="unemployment">Chômage</option>
+                 <option value="gdp">PIB</option>
+                 <option value="realRate">Taux réel</option>
+                 <option value="savings">Épargne</option>
+                 <option value="food">Prix alimentaires</option>
+                 <option value="oil">Pétrole Brent</option>
+                 <option value="gas-us">Gaz naturel US</option>
+                 <option value="gas-eu">Gaz naturel Europe</option>
+                 <option value="gas-jp">GNL Japon</option>
+                 <option value="corn">Maïs</option>
+                 <option value="rice">Riz thaï</option>
+                 <option value="soybean">Huile soja</option>
+                 <option value="palm">Huile palme</option>
+                 <option value="sunflower">Huile tournesol</option>
+                 <option value="copper">Cuivre</option>
+                 <option value="aluminum">Aluminium</option>
+                 <option value="iron">Minerai fer</option>
+                 <option value="zinc">Zinc</option>
+                 <option value="nickel">Nickel</option>
+                 <option value="ppi">Prix production</option>
+                 <option value="u6">Chômage U6 (US)</option>
+                 <option value="wages">Croissance salaires US</option>
+                 <option value="liquidity">Liquidité USD</option>
+                 <option value="inflation">Inflation globale</option>
+               </select>
+            </div>
+            <div class="w-1/2">
+              <label for="selectPeriod" class="block text-sm text-muted">Période</label>
+              <select id="selectPeriod" class="mt-1 border rounded px-3 py-2 text-sm w-full">
+                <option value="6">6 mois</option>
+                <option value="12" selected>12 mois</option>
+                <option value="24">24 mois</option>
+              </select>
+            </div>
+          </div>
+          <canvas id="mainChart" height="200"></canvas>
+        </div>
+       
+    <!-- ===== SECTION : NEWS ===== -->
+    <section id="news" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Actualités économiques</h2>
+      <div class="card mb-8">
+        <ul class="space-y-4 text-sm text-muted">
+          <li><a href="#" class="flex items-start space-x-3 hover:underline">
+              <i class="fas fa-newspaper fa-lg text-secondary"></i>
+              <div>
+                <h3 class="font-medium">Banque centrale maintient le taux directeur</h3>
+                <p class="text-xs">2025-07-09</p>
+              </div>
+            </a>
+          </li>
+          <li><a href="#" class="flex items-start space-x-3 hover:underline">
+              <i class="fas fa-newspaper fa-lg text-secondary"></i>
+              <div>
+                <h3 class="font-medium">Inflation ralentit à 2.3 %</h3>
+                <p class="text-xs">2025-07-09</p>
+              </div>
+            </a>
+          </li>
+          <li><a href="#" class="flex items-start space-x-3 hover:underline">
+              <i class="fas fa-newspaper fa-lg text-secondary"></i>
+              <div>
+                <h3 class="font-medium">Hausse des prix du pétrole pèse</h3>
+                <p class="text-xs">2025-07-08</p>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <button id="refreshNews" class="mt-4 bg-primary hover:bg-secondary text-white px-4 py-2 rounded text-sm">
+          Actualiser
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== SECTION : FORECAST ===== -->
+    <section id="forecast" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Lancer une prévision d'inflation</h2>
+      <div class="card mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm text-muted">Début :</label>
+            <input type="month" id="startForecast" class="mt-1 border rounded px-3 py-2 text-sm w-full"/>
+          </div>
+          <div>
+            <label class="block text-sm text-muted">Fin :</label>
+            <input type="month" id="endForecast" class="mt-1 border rounded px-3 py-2 text-sm w-full"/>
+          </div>
+        </div>
+        <button onclick="launchForecast()" class="mt-4 bg-primary hover:bg-secondary text-white px-4 py-2 rounded text-sm">
+          Générer
+        </button>
+        <p id="forecastStatus" class="mt-2 text-secondary text-sm hidden">Prévision générée ✓</p>
+      </div>
+
+      <div id="forecastResult" class="card hidden">
+        <h3 class="text-lg font-semibold mb-3">Rapport prévision</h3>
+        <p><strong>Période :</strong> <span id="forecastPeriod">—</span></p>
+        <p><strong>Inflation projetée moyenne :</strong> <span id="forecastValue">2.4 %</span></p>
+        <p><strong>Scénario :</strong> Maintien des politiques monétaires…</p>
+        <ul class="list-disc text-sm text-muted pl-5 mt-2 mb-4">
+          <li>Renforcement des réserves monétaires</li>
+          <li>Encouragement à l'épargne longue durée</li>
+          <li>Surveillance des flux de crédit</li>
+        </ul>
+        <canvas id="forecastChart" height="200"></canvas>
+        <button id="downloadForecastBtn" class="mt-4 bg-secondary hover:bg-secondary-dark text-white px-4 py-2 rounded text-sm">
+          Télécharger le rapport (PDF)
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== SECTION : RAPPORTS ===== -->
+    <section id="reports" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Rapports mensuels archivés</h2>
+
+      <!-- Choix + aperçu -->
+      <div class="card mb-6">
+        <label for="reportSelect" class="block text-sm text-muted mb-2">Choisir un rapport :</label>
+        <select id="reportSelect" class="mt-1 border rounded px-3 py-2 text-sm w-full">
+          <option value="">-- --</option>
+          <option value="avril">Avril 2025</option>
+          <option value="mars">Mars 2025</option>
+          <option value="fevrier">Février 2025</option>
+        </select>
+      </div>
+      <div id="reportPreviewCard" class="card mb-8 hidden">
+        <h3 id="reportPreviewTitle" class="text-lg font-semibold mb-3"></h3>
+        <iframe id="reportPreviewFrame" class="w-full" style="min-height:300px; border:1px solid var(--color-muted);"></iframe>
+        <button id="downloadReportBtn" class="mt-4 bg-secondary hover:bg-secondary-dark text-white px-4 py-2 rounded text-sm">
+          Télécharger le rapport (PDF)
+        </button>
+      </div>
+
+      <!-- Archives statiques fallback -->
+      <div class="card">
+        <h3 class="text-sm font-medium mb-3">Archives précédentes</h3>
+        <ul class="text-sm space-y-2">
+          <li class="flex justify-between"><span>Janvier 2025</span><a href="#" class="text-secondary hover:underline">Télécharger</a></li>
+          <li class="flex justify-between"><span>Décembre 2024</span><a href="#" class="text-secondary hover:underline">Télécharger</a></li>
+          <li class="flex justify-between"><span>Novembre 2024</span><a href="#" class="text-secondary hover:underline">Télécharger</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== SECTION : RECOMMANDATIONS ===== -->
+    <section id="recommendations" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Recommandations stratégiques</h2>
+      <div class="card space-y-4 mb-6">
+        <label class="block text-sm text-muted">Sélectionner un rapport :</label>
+        <select id="recReport" class="mt-1 border rounded px-3 py-2 text-sm w-full">
+          <option value="avril">Avril 2025</option>
+          <option value="mars">Mars 2025</option>
+          <option value="fevrier">Février 2025</option>
+        </select>
+        <label class="block text-sm text-muted">Recommandation :</label>
+        <select id="recOption" class="mt-1 border rounded px-3 py-2 text-sm w-full">
+          <option>Stabilisation du taux directeur</option>
+          <option>Réduction de la masse monétaire</option>
+          <option>Encouragement de l'épargne nationale</option>
+          <option>Intervention sur les importations</option>
+        </select>
+        <label class="block text-sm text-muted">Institution :</label>
+        <input type="text" id="recOrg" class="mt-1 border rounded px-3 py-2 text-sm w-full" placeholder="Ex : Banque Centrale"/>
+        <button onclick="sendRecommendation()" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded text-sm">
+          Envoyer
+        </button>
+        <p id="recStatus" class="mt-2 text-secondary text-sm hidden">Recommandation transmise ✓</p>
+      </div>
+      <div class="card">
+        <h3 class="text-sm font-medium mb-3">Historique</h3>
+        <ul id="recHistory" class="text-sm space-y-2">
+          <li>2025-04-30 – Avril 2025 → Banque Centrale : Stabilisation taux directeur</li>
+          <li>2025-03-28 – Mars 2025 → Ministère Économie : Encouragement épargne</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== SECTION : ANALYSE CAUSALE ===== -->
+    <section id="causale" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Analyse causale</h2>
+      <div class="card mb-6">
+        <label for="causeMonth" class="block text-sm text-muted mb-2">Sélectionner le mois :</label>
+        <select id="causeMonth" onchange="updateCausal()" class="mt-1 border rounded px-3 py-2 text-sm w-full">
+          <option value="mai">Mai 2025</option>
+          <option value="avril">Avril 2025</option>
+          <option value="mars">Mars 2025</option>
+        </select>
+      </div>
+      <div class="card mb-6 overflow-auto">
+        <table class="w-full text-sm border rounded">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left">Indicateur</th>
+              <th class="px-4 py-2 text-left">Impact estimé (%)</th>
+              <th class="px-4 py-2 text-left">Type</th>
+            </tr>
+          </thead>
+          <tbody id="causeTable"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3 class="text-sm font-medium mb-3">Visualisation des impacts</h3>
+        <canvas id="causalRadar" height="300"></canvas>
+      </div>
+    </section>
+
+    <!-- ===== SECTION : FEEDBACK ===== -->
+    <section id="feedback" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Feedback</h2>
+      <div class="card space-y-4 mb-6">
+        <label class="block text-sm text-muted">Sélectionner une prévision :</label>
+        <select id="fbSelectForecast" class="mt-1 border rounded px-3 py-2 text-sm w-full">
+          <option value="mars2025">Prévision Mars 2025</option>
+          <option value="avril2025">Prévision Avril 2025</option>
+          <option value="mai2025">Prévision Mai 2025</option>
+        </select>
+        <label class="block text-sm text-muted">Ou indiquer une période :</label>
+        <input type="month" id="fbPeriod" class="mt-1 border rounded px-3 py-2 text-sm w-full"/>
+        <label class="block text-sm text-muted">Type de retour :</label>
+        <select id="fbType" class="mt-1 border rounded px-3 py-2 text-sm w-full">
+          <option value="positif">✅ Conforme</option>
+          <option value="neutre">⚠️ À surveiller</option>
+          <option value="negatif">❌ À corriger</option>
+        </select>
+        <label class="block text-sm text-muted">Commentaire :</label>
+        <textarea id="fbComment" rows="4" class="mt-1 border rounded px-3 py-2 text-sm w-full" placeholder="Votre commentaire…"></textarea>
+        <button onclick="submitFeedback()" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded text-sm">
+          Envoyer
+        </button>
+        <p id="fbStatus" class="mt-2 text-secondary text-sm hidden">Feedback enregistré ✓</p>
+      </div>
+      <div class="card">
+        <h3 class="text-sm font-medium mb-3">Historique</h3>
+        <ul id="fbList" class="text-sm space-y-2"></ul>
+      </div>
+    </section>
+
+    <!-- ===== SECTION : UTILISATEURS ===== -->
+    <section id="users" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Gestion des utilisateurs</h2>
+      <div class="card space-y-4 mb-6">
+        <h3 class="text-sm font-medium">Ajouter un nouvel utilisateur</h3>
+        <input type="text" id="userName" class="mt-1 border rounded px-3 py-2 text-sm w-full" placeholder="Nom complet"/>
+        <input type="email" id="userEmail" class="mt-1 border rounded px-3 py-2 text-sm w-full" placeholder="Adresse email"/>
+        <select id="userRole" class="mt-1 border rounded px-3 py-2 text-sm w-full">
+          <option value="admin">Administrateur</option>
+          <option value="analyste">Analyste</option>
+          <option value="lecteur">Lecteur</option>
+        </select>
+        <button onclick="addUser()" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded text-sm">
+          Ajouter
+        </button>
+        <p id="userStatus" class="mt-2 text-secondary text-sm hidden">Utilisateur ajouté ✓</p>
+      </div>
+      <div class="card mb-6">
+        <h3 class="text-sm font-medium mb-3">Liste des utilisateurs</h3>
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-3 py-2 text-left">Nom</th>
+              <th class="px-3 py-2 text-left">Email</th>
+              <th class="px-3 py-2 text-left">Rôle</th>
+              <th class="px-3 py-2 text-left">Ajouté le</th>
+            </tr>
+          </thead>
+          <tbody id="userTable">
+            <tr><td class="px-3 py-1">Alice Martin</td><td>alice.martin@exemple.ma</td><td>Administrateur</td><td>2025-06-15 09:24</td></tr>
+            <tr><td class="px-3 py-1">Youssef El Amri</td><td>y.elamri@exemple.ma</td><td>Analyste</td><td>2025-06-20 14:10</td></tr>
+            <tr><td class="px-3 py-1">Sophie Nganga</td><td>s.nganga@exemple.ma</td><td>Lecteur</td><td>2025-06-22 11:45</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3 class="text-sm font-medium mb-3">Historique</h3>
+        <ul id="userLog" class="text-sm space-y-2">
+          <li>👤 Alice Martin ajouté le 2025-06-15 09:24</li>
+          <li>👤 Youssef El Amri ajouté le 2025-06-20 14:10</li>
+          <li>👤 Sophie Nganga ajouté le 2025-06-22 11:45</li>
+          <li>🔑 Youssef El Amri connecté le 2025-07-08 08:12</li>
+          <li>🔑 Alice Martin déconnecté le 2025-07-08 17:03</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== SECTION : QUALITÉ DES DONNÉES ===== -->
+    <section id="qualite" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Qualité des données</h2>
+      <div class="card">
+        <p class="text-sm text-muted mb-4">
+          Présentation des indicateurs reçus par les institutions, date et qualité.
+        </p>
+        <table class="w-full text-sm border rounded">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left">Indicateur</th>
+              <th class="px-4 py-2 text-left">Institution</th>
+              <th class="px-4 py-2 text-left">Volume</th>
+              <th class="px-4 py-2 text-left">Réception</th>
+              <th class="px-4 py-2 text-left">État</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="px-4 py-2">Inflation (IPC)</td><td>HCP</td><td>312</td><td>2025-05-18</td><td class="text-green-600">✔ Conforme</td></tr>
+            <tr><td class="px-4 py-2">PIB réel</td><td>Min. Éco</td><td>198</td><td>2025-05-15</td><td class="text-yellow-600">⚠️ Vérifier</td></tr>
+            <tr><td class="px-4 py-2">Épargne</td><td>Banque Centrale</td><td>225</td><td>2025-05-13</td><td class="text-green-600">✔ Conforme</td></tr>
+            <tr><td class="px-4 py-2">Masse monétaire (M2)</td><td>FMI</td><td>176</td><td>2025-05-10</td><td class="text-red-600">❌ Incomplet</td></tr>
+            <tr><td class="px-4 py-2">IPP</td><td>ONS</td><td>88</td><td>2025-05-08</td><td class="text-yellow-600">⚠️ Partiel</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== SECTION : ALERTES RÉGIONALES ===== -->
+    <section id="alerts" class="hidden">
+      <h2 class="text-2xl font-semibold mb-4">Alertes régionales d'inflation</h2>
+      <div class="card mb-8">
+        <p class="text-sm text-muted">
+          Zones où la hausse d'inflation est inhabituelle selon les seuils.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+          <div class="border-l-4 border-red-600 bg-red-50 p-4 rounded">
+            <h4 class="font-semibold text-red-800">Nord</h4>
+            <p class="text-sm text-red-700">Inflation : 7.9 % (+1.1 %)</p>
+            <p class="text-sm">Pression carburants</p>
+          </div>
+          <div class="border-l-4 border-yellow-600 bg-yellow-50 p-4 rounded">
+            <h4 class="font-semibold text-yellow-800">Est</h4>
+            <p class="text-sm text-yellow-700">Inflation : 5.1 % (+0.4 %)</p>
+            <p class="text-sm">Suivi importations</p>
+          </div>
+          <div class="border-l-4 border-accent bg-accent/20 p-4 rounded">
+            <h4 class="font-semibold text-accent">Sud</h4>
+            <p class="text-sm text-accent">Inflation : 6.3 % (+0.8 %)</p>
+            <p class="text-sm">Tourisme</p>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="text-lg font-semibold mb-2">Synthèse mensuelle</h3>
+        <table class="w-full text-sm border rounded">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left">Région</th>
+              <th class="px-4 py-2 text-left">Inflation</th>
+              <th class="px-4 py-2 text-left">Alerte</th>
+              <th class="px-4 py-2 text-left">Var. vs mois préc.</th>
+              <th class="px-4 py-2 text-left">Commentaires</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="px-4 py-2">Nord</td><td class="px-4 py-2 text-red-700">7.9 %</td><td class="px-4 py-2 text-red-600">⚠️ Forte</td><td class="px-4 py-2 text-red-600">+1.1 %</td><td class="px-4 py-2">Carburants</td></tr>
+            <tr><td class="px-4 py-2">Est</td><td class="px-4 py-2 text-yellow-700">5.1 %</td><td class="px-4 py-2 text-yellow-600">⚠️ Modérée</td><td class="px-4 py-2 text-yellow-600">+0.4 %</td><td class="px-4 py-2">Importations</td></tr>
+            <tr><td class="px-4 py-2">Sud</td><td class="px-4 py-2 text-accent">6.3 %</td><td class="px-4 py-2 text-accent">⚠️ Moyenne</td><td class="px-4 py-2 text-accent">+0.8 %</td><td class="px-4 py-2">Tourisme</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== SCRIPTS ===== -->
+  <script>
+    function switchLanguage(lang){ I18N && I18N.setLang && I18N.setLang(lang); }
+    I18N && I18N.applyI18n && I18N.applyI18n();
+    I18N && I18N.renderSwitcher && I18N.renderSwitcher(document.getElementById('langSwitcher'));
+
+    // Allowed indicators to display (minimized set)
+    const ALLOWED_KEYS = ['m2','exchange','cpi','unemployment','gdp','realRate','savings','food','oil','gas-us','copper'];
+    const ALLOWED_LABEL_SUBSTR = [
+      'Masse monétaire',
+      'Taux de change',
+      'Indice prix à la consommation',
+      'Taux de chômage',
+      'Croissance du PIB',
+      "Taux d'intérêt réel",
+      'Épargne brute',
+      'Prix alimentaires',
+      'Pétrole Brent',
+      'Gaz naturel US',
+      'Cuivre'
+    ];
+
+    function filterKpiCards() {
+      const grid = document.querySelector('#dashboard .grid');
+      if (!grid) return;
+      const cards = Array.from(grid.children).filter(n => n.classList && n.classList.contains('card'));
+      cards.forEach(card => {
+        const labelEl = card.querySelector('.text-xs');
+        const label = labelEl ? labelEl.textContent : '';
+        const keep = ALLOWED_LABEL_SUBSTR.some(s => label.includes(s));
+        if (!keep) card.parentNode.removeChild(card);
+      });
+    }
+
+    // 1) Données indicateurs
+    const indicatorData = {
+      m2:{ label:"Masse monétaire (% PIB)", data:{6:[67,67.5,68,68.4,68.2,68.4],12:[65,65.5,66,66.5,67,67.5,68,68.2,68.4,68.3,68.4,68.5],24:Array.from({length:24},(_,i)=>65+i*0.5)}},
+      exchange:{ label:"Indice taux de change", data:{6:[108,109,110,112,111,113],12:[106,107,108,110,109,110,111,112,113,112,113,114],24:Array.from({length:24},(_,i)=>106+i*0.4)}},
+      cpi:{ label:"Indice prix à la consommation", data:{6:[109,109.2,109.4,109.6,109.5,109.6],12:[108.5,108.8,109,109.2,109.4,109.5,109.6,109.5,109.6,109.5,109.6,109.6],24:Array.from({length:24},(_,i)=>108+0.2*Math.cos(i/3))}},
+      unemployment:{ label:"Taux de chômage (%)", data:{6:[9.8,9.7,9.6,9.5,9.6,9.8],12:[10.1,10,9.9,9.8,9.7,9.8,9.6,9.7,9.5,9.6,9.7,9.8],24:Array.from({length:24},(_,i)=>10-0.05*i+Math.random()*0.1)}},
+      gdp:{ label:"Croissance du PIB (%)", data:{6:[3,3.1,3.2,3.1,3,3.3],12:[2.9,3,3.1,3.2,3.1,3,3.1,3.2,3,3.1,3.1,3.2],24:Array.from({length:24},(_,i)=>2.5+0.3*Math.cos(i/3))}},
+      realRate:{ label:"Taux d'intérêt réel (%)", data:{6:[1.1,1.2,1.1,1.1,1,1.1],12:[1,1.1,1,1.1,1.1,1,1.1,1.2,1.1,1.1,1.1,1.1],24:Array.from({length:24},(_,i)=>1+0.05*Math.sin(i/2))}},
+      savings:{ label:"Épargne brute (%)", data:{6:[17.2,17.4,17.6,17.5,17.6,17.7],12:[17.1,17.3,17.4,17.6,17.5,17.6,17.7,17.6,17.6,17.7,17.6,17.8],24:Array.from({length:24},(_,i)=>17+0.4*Math.cos(i/4))}},
+      food:{ label:"Indice prix alimentaires", data:{6:[124.5,124.8,125.1,125.3,125.2,125.3],12:[123.8,124.1,124.4,124.7,125.0,125.2,125.3,125.1,125.3,125.2,125.3,125.4],24:Array.from({length:24},(_,i)=>123+0.1*i+Math.random()*0.2)}},
+      oil:{ label:"Pétrole Brent ($/bbl)", data:{6:[76.2,77.1,77.8,78.5,78.1,78.5],12:[74.5,75.2,75.8,76.5,77.2,77.8,78.5,78.2,78.5,78.3,78.5,78.6],24:Array.from({length:24},(_,i)=>74+0.2*i+Math.random()*0.5)}},
+      'gas-us':{ label:"Gaz naturel US ($/MMBtu)", data:{6:[2.9,2.87,2.84,2.85,2.86,2.85],12:[2.95,2.92,2.89,2.86,2.83,2.87,2.85,2.86,2.85,2.84,2.85,2.86],24:Array.from({length:24},(_,i)=>2.9-0.01*i+Math.random()*0.05)}},
+      'gas-eu':{ label:"Gaz Europe (€/MWh)", data:{6:[44.2,44.5,44.8,45.2,45.0,45.2],12:[43.5,43.8,44.1,44.5,44.8,45.0,45.2,45.1,45.2,45.0,45.2,45.3],24:Array.from({length:24},(_,i)=>43.5+0.08*i+Math.random()*0.2)}},
+      'gas-jp':{ label:"GNL Japon ($/MMBtu)", data:{6:[12.6,12.7,12.75,12.8,12.78,12.8],12:[12.4,12.5,12.6,12.7,12.75,12.78,12.8,12.79,12.8,12.78,12.8,12.81],24:Array.from({length:24},(_,i)=>12.4+0.02*i+Math.random()*0.05)}},
+      corn:{ label:"Maïs ($/boisseau)", data:{6:[4.3,4.28,4.26,4.25,4.26,4.25],12:[4.35,4.33,4.31,4.29,4.27,4.26,4.25,4.26,4.25,4.26,4.25,4.24],24:Array.from({length:24},(_,i)=>4.35-0.005*i+Math.random()*0.02)}},
+      rice:{ label:"Riz thaï ($/tonne)", data:{6:[578,579,579.5,580,579.8,580],12:[576,577,577.5,578.5,579,579.5,580,579.8,580,579.9,580,580.1],24:Array.from({length:24},(_,i)=>576+0.2*i+Math.random()*0.5)}},
+      soybean:{ label:"Huile soja ($/tonne)", data:{6:[975,977,978.5,980,979.2,980],12:[972,974,975.5,977,978.5,979.2,980,979.5,980,979.8,980,980.2],24:Array.from({length:24},(_,i)=>972+0.4*i+Math.random()*0.8)}},
+      palm:{ label:"Huile palme ($/tonne)", data:{6:[847,848,849,850,849.5,850],12:[844,845,846,847.5,848.5,849.5,850,849.8,850,849.9,850,850.1],24:Array.from({length:24},(_,i)=>844+0.3*i+Math.random()*0.6)}},
+      sunflower:{ label:"Huile tournesol ($/tonne)", data:{6:[1195,1197,1198.5,1200,1199.2,1200],12:[1192,1194,1195.5,1197,1198.5,1199.2,1200,1199.5,1200,1199.8,1200,1200.2],24:Array.from({length:24},(_,i)=>1192+0.4*i+Math.random()*0.8)}},
+      copper:{ label:"Cuivre ($/tonne)", data:{6:[8300,8350,8400,8450,8425,8450],12:[8200,8250,8300,8350,8400,8425,8450,8437,8450,8440,8450,8455],24:Array.from({length:24},(_,i)=>8200+12*i+Math.random()*50)}},
+      aluminum:{ label:"Aluminium ($/tonne)", data:{6:[2160,2170,2175,2180,2177,2180],12:[2140,2150,2160,2170,2175,2177,2180,2178,2180,2179,2180,2181],24:Array.from({length:24},(_,i)=>2140+2*i+Math.random()*10)}},
+      iron:{ label:"Minerai fer ($/tonne)", data:{6:[95.8,95.6,95.4,95.5,95.6,95.5],12:[96.2,96.0,95.8,95.6,95.4,95.6,95.5,95.6,95.5,95.6,95.5,95.4],24:Array.from({length:24},(_,i)=>96.2-0.04*i+Math.random()*0.2)}},
+      zinc:{ label:"Zinc ($/tonne)", data:{6:[2630,2640,2645,2650,2647,2650],12:[2610,2620,2630,2640,2645,2647,2650,2648,2650,2649,2650,2651],24:Array.from({length:24},(_,i)=>2610+2*i+Math.random()*10)}},
+      nickel:{ label:"Nickel ($/tonne)", data:{6:[16600,16700,16750,16800,16775,16800],12:[16400,16500,16600,16700,16750,16775,16800,16787,16800,16793,16800,16807],24:Array.from({length:24},(_,i)=>16400+20*i+Math.random()*100)}},
+      ppi:{ label:"Indice prix production", data:{6:[114.8,114.9,115.0,115.2,115.1,115.2],12:[114.2,114.4,114.6,114.8,115.0,115.1,115.2,115.1,115.2,115.1,115.2,115.3],24:Array.from({length:24},(_,i)=>114.2+0.05*i+Math.random()*0.1)}},
+      u6:{ label:"Taux chômage U6 (US)", data:{6:[7.3,7.25,7.2,7.2,7.22,7.2],12:[7.5,7.4,7.3,7.25,7.2,7.22,7.2,7.21,7.2,7.21,7.2,7.19],24:Array.from({length:24},(_,i)=>7.5-0.015*i+Math.random()*0.05)}},
+      wages:{ label:"Croissance salaires US (%)", data:{6:[3.9,4.0,4.05,4.1,4.08,4.1],12:[3.7,3.8,3.9,4.0,4.05,4.08,4.1,4.09,4.1,4.09,4.1,4.11],24:Array.from({length:24},(_,i)=>3.7+0.02*i+Math.random()*0.05)}},
+      liquidity:{ label:"Liquidité USD (T$)", data:{6:[21.6,21.65,21.7,21.8,21.75,21.8],12:[21.2,21.3,21.4,21.5,21.6,21.7,21.8,21.75,21.8,21.77,21.8,21.82],24:Array.from({length:24},(_,i)=>21.2+0.03*i+Math.random()*0.1)}},
+      inflation:{ label:"Inflation globale (%)", data:{6:[2.2,2.25,2.3,2.3,2.28,2.3],12:[2.0,2.1,2.2,2.25,2.3,2.28,2.3,2.29,2.3,2.29,2.3,2.31],24:Array.from({length:24},(_,i)=>2.0+0.015*i+Math.random()*0.03)}}
+    };
+    const monthLabels = {6:["Jan","Fév","Mars","Avr","Mai","Juin"],12:["Juil","Août","Sept","Oct","Nov","Déc","Jan","Fév","Mars","Avr","Mai","Juin"],24:Array.from({length:24},(_,i)=>`M-${24-i}`)};
+
+    // 2) Sparklines (restricted)
+    ['m2','exchange','cpi','unemployment','gdp','realRate','savings','food','oil','gas-us','copper'].forEach(key=>{
+      const el = document.getElementById(`sparkline-${key}`);
+      if(!el) return;
+      const ctx = el.getContext('2d');
+      new Chart(ctx,{
+        type:'line',
+        data:{ labels: monthLabels[6], datasets:[{ data: indicatorData[key]?.data?.[6] || [], borderColor:"var(--color-accent)", borderWidth:2, pointRadius:0, fill:false, tension:0.3 }]},
+        options:{ responsive:false, plugins:{ legend:{display:false}, tooltip:{enabled:false} }, scales:{ x:{display:false}, y:{display:false} } }
+      });
+    });
+
+    // Helper to rebuild select with allowed indicators
+    function rebuildIndicatorSelect() {
+      const select = document.getElementById('selectIndicator');
+      if(!select) return;
+      select.innerHTML = '';
+      const labels = {
+        'm2': 'Masse monétaire',
+        'exchange': 'Taux de change',
+        'cpi': 'CPI',
+        'unemployment': 'Chômage',
+        'gdp': 'PIB',
+        'realRate': "Taux réel",
+        'savings': 'Épargne',
+        'food': 'Prix alimentaires',
+        'oil': 'Pétrole Brent',
+        'gas-us': 'Gaz naturel US',
+        'copper': 'Cuivre'
+      };
+      ALLOWED_KEYS.forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = labels[k] || k;
+        select.appendChild(opt);
+      });
+    }
+
+    // 3) Multi-indicator chart
+    let multiChart;
+    function updateMultiChart(){
+      const period = parseInt(document.getElementById("selectPeriod").value);
+      const labels = monthLabels[period];
+      const palette = ["#E67E22","#16A085","#34495E","#95A5A6","#C3D9E8","#ADCBE3","#B0CAD2","#2ecc71","#8e44ad","#d35400","#2980b9"];
+      const datasets = ALLOWED_KEYS.map((key,idx)=>({
+        label: indicatorData[key]?.label || key,
+        data: indicatorData[key]?.data?.[period] || [],
+        borderColor: palette[idx%palette.length],
+        fill:false, tension:0.3, pointRadius:3
+      }));
+      const ctx = document.getElementById("multiChart").getContext("2d");
+      if(multiChart) multiChart.destroy();
+      multiChart = new Chart(ctx,{
+        type:'line',
+        data:{ labels, datasets },
+        options:{
+          responsive:true,
+          plugins:{ legend:{ labels:{ color:"var(--color-primary)", font:{size:12} }}, tooltip:{mode:'index',intersect:false} },
+          scales:{ x:{ticks:{color:"var(--color-muted)"},grid:{display:false}}, y:{ticks:{color:"var(--color-muted)"},grid:{color:"rgba(0,0,0,0.05)"}} }
+        }
+      });
+    }
+
+    // 4) MainChart single indicator
+    let mainChart;
+    function updateMainChart(){
+      const key = document.getElementById("selectIndicator").value;
+      const period = parseInt(document.getElementById("selectPeriod").value);
+      const labels = monthLabels[period];
+      const data = indicatorData[key].data[period];
+      const ctx = document.getElementById("mainChart").getContext("2d");
+      const grad = ctx.createLinearGradient(0,0,0,400);
+      grad.addColorStop(0,"rgba(22,160,133,0.3)");
+      grad.addColorStop(1,"rgba(22,160,133,0)");
+      if(mainChart) mainChart.destroy();
+      mainChart = new Chart(ctx,{
+        type:'line',
+        data:{ labels, datasets:[{ label:indicatorData[key].label, data, fill:true, backgroundColor:grad, borderColor:"var(--color-secondary)", tension:0.4, pointRadius:4 }]},
+        options:{
+          responsive:true,
+          plugins:{ legend:{ labels:{color:"var(--color-primary)",font:{size:12}}}, tooltip:{backgroundColor:"#fff",titleColor:"var(--color-primary)",bodyColor:"var(--color-primary)",borderColor:"var(--color-secondary)",borderWidth:1}},
+          scales:{ x:{ticks:{color:"var(--color-muted)"},grid:{color:"rgba(0,0,0,0.05)"}}, y:{ticks:{color:"var(--color-muted)"},grid:{color:"rgba(0,0,0,0.05)"}}}
+        }
+      });
+    }
+
+    // 5) Analyse causale
+    const causalData = {
+      mai:   { labels:["M2","PIB réel","Taux d'intérêt","Épargne","IPP"], data:[42,25,13,11,9], types:["Expansif","Stabilisateur","Contrôle","Modérateur","Neutre"] },
+      avril: { labels:["M2","PIB réel","Taux d'intérêt","Épargne","IPP"], data:[38,28,14,12,8], types:["Expansif","Stabilisateur","Contrôle","Modérateur","Neutre"] },
+      mars:  { labels:["M2","PIB réel","Taux d'intérêt","Épargne","IPP"], data:[40,26,15,10,9], types:["Expansif","Stabilisateur","Contrôle","Modérateur","Neutre"] }
+    };
+    let causalChart;
+    function updateCausal(){
+      const m = document.getElementById("causeMonth").value;
+      const { labels,data,types } = causalData[m];
+      document.getElementById("causeTable").innerHTML = labels.map((lab,i)=>`
+        <tr>
+          <td class="px-4 py-2">${lab}</td>
+          <td class="px-4 py-2">${data[i]} %</td>
+          <td class="px-4 py-2">${types[i]}</td>
+        </tr>
+      `).join("");
+      const ctx = document.getElementById("causalRadar").getContext("2d");
+      if(causalChart) causalChart.destroy();
+      causalChart = new Chart(ctx,{
+        type:'radar',
+        data:{ labels, datasets:[{ label:"Impact (%)", data, backgroundColor:"rgba(230,126,34,0.2)", borderColor:"var(--color-accent)", pointBackgroundColor:"var(--color-accent)" }]},
+        options:{ responsive:true, scales:{ r:{ angleLines:{display:false}, suggestedMin:0, suggestedMax:50, ticks:{color:"var(--color-muted)"}, pointLabels:{color:"var(--color-primary)",font:{size:12}}}}, plugins:{ legend:{ labels:{color:"var(--color-primary)",font:{size:12}}}} }
+      });
+    }
+
+    // 6) Prévisions + jsPDF
+    let lastForecastDoc = null;
+    function launchForecast(){
+      const start = document.getElementById("startForecast").value;
+      const end   = document.getElementById("endForecast").value;
+      if(!start||!end){ alert("Veuillez remplir les deux dates."); return; }
+      document.getElementById("forecastStatus").classList.remove("hidden");
+      document.getElementById("forecastResult").classList.remove("hidden");
+      document.getElementById("forecastPeriod").textContent = `${start} → ${end}`;
+      // graphique
+      const ctx = document.getElementById("forecastChart").getContext("2d");
+      if(window.forecastGraph) window.forecastGraph.destroy();
+      const vals = [2.3,2.4,2.5,2.4,2.3,2.4];
+      const grad = ctx.createLinearGradient(0,0,0,400);
+      grad.addColorStop(0,"rgba(22,160,133,0.2)");
+      grad.addColorStop(1,"rgba(22,160,133,0)");
+      window.forecastGraph = new Chart(ctx,{
+        type:'line',
+        data:{ labels:["T1","T2","T3","T4","T5","T6"], datasets:[{ label:"Inflation projetée", data:vals, borderColor:"var(--color-secondary)", backgroundColor:grad, tension:0.3, fill:true, pointRadius:4 }]},
+        options:{ responsive:true, plugins:{ legend:{display:true}, tooltip:{backgroundColor:"#fff",titleColor:"var(--color-primary)",bodyColor:"var(--color-primary)" } }, scales:{ x:{ticks:{color:"var(--color-muted)"},grid:{color:"rgba(0,0,0,0.05)"}}, y:{beginAtZero:false,ticks:{color:"var(--color-muted)"},grid:{color:"rgba(0,0,0,0.05)"}} } }
+      });
+      // PDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text("Rapport de prévision d'inflation",20,20);
+      doc.setFontSize(12);
+      let y=30;
+      doc.text(`Période : ${start} → ${end}`,20,y); y+=8;
+      doc.text(`Inflation projetée moyenne : 2.4 %`,20,y); y+=8;
+      doc.text("Recommandations :",20,y); y+=8;
+      ["Renforcement des réserves monétaires","Encouragement épargne","Surveillance flux crédit"].forEach(l=>{
+        doc.text(`• ${l}`,25,y); y+=7;
+      });
+      lastForecastDoc = doc;
+    }
+    document.getElementById("downloadForecastBtn").addEventListener("click",()=>{
+      if(lastForecastDoc) lastForecastDoc.save("Rapport_Prevision.pdf");
+    });
+
+    // 7) Rapports archivés & aperçu
+    const reportData = {
+      avril:{ title:"Rapport – Avril 2025", period:"2025-04-30", inflation:"2.4 %", analysis:"Maîtrisée malgré pressions saisonnières énergie et alimentation.", decision:"Maintien taux directeur à 2.5 %." },
+      mars:{  title:"Rapport – Mars 2025",  period:"2025-03-31", inflation:"2.5 %", analysis:"Légère pression inflationniste importée.", decision:"Surveillance accrue prix alimentaires." },
+      fevrier:{title:"Rapport – Février 2025",period:"2025-02-28", inflation:"2.3 %", analysis:"Stabilité malgré volatilité carburants.", decision:"Maintien facilités de crédit."}
+    };
+    document.getElementById("reportSelect").addEventListener("change",(e)=>{
+      const key = e.target.value;
+      if(!key){ document.getElementById("reportPreviewCard").classList.add("hidden"); return; }
+      const d = reportData[key];
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(16); doc.text(d.title,20,20);
+      doc.setFontSize(12);
+      let y=30;
+      doc.text(`Date : ${d.period}`,20,y); y+=8;
+      doc.text(`Inflation observée : ${d.inflation}`,20,y); y+=8;
+      doc.text("Analyse :",20,y); y+=7;
+      doc.text(d.analysis,25,y); y+=10;
+      doc.text("Décision :",20,y); y+=7;
+      doc.text(d.decision,25,y);
+      const uri = doc.output('datauristring');
+      document.getElementById("reportPreviewFrame").src = uri;
+      document.getElementById("reportPreviewTitle").textContent = d.title;
+      document.getElementById("downloadReportBtn").onclick = ()=> doc.save(`${d.title}.pdf`);
+      document.getElementById("reportPreviewCard").classList.remove("hidden");
+    });
+
+    // 8) Recommandations
+    function sendRecommendation(){
+      const report = document.getElementById("recReport").value;
+      const option = document.getElementById("recOption").value;
+      const org = document.getElementById("recOrg").value.trim();
+      if(!org){ alert("Veuillez renseigner l'institution."); return;}
+      const now = new Date().toLocaleDateString();
+      document.getElementById("recHistory").insertAdjacentHTML("afterbegin",
+        `<li>${now} – ${report} → ${org} : ${option}</li>`);
+      document.getElementById("recStatus").classList.remove("hidden");
+      setTimeout(()=> document.getElementById("recStatus").classList.add("hidden"),3000);
+      document.getElementById("recOrg").value="";
+    }
+
+    // 9) Feedback
+    function submitFeedback(){
+      const forecast = document.getElementById("fbSelectForecast").value;
+      const period   = document.getElementById("fbPeriod").value;
+      const type     = document.getElementById("fbType").value;
+      const comment  = document.getElementById("fbComment").value.trim();
+      if(!comment){ alert("Veuillez saisir un commentaire."); return; }
+      const now = new Date().toLocaleString();
+      let liClass="", label="";
+      if(type==="positif"){ liClass="bg-green-50 border-l-4 border-green-400"; label="🟢"; }
+      if(type==="neutre") { liClass="bg-yellow-50 border-l-4 border-yellow-400"; label="🟡"; }
+      if(type==="negatif"){ liClass="bg-red-50 border-l-4 border-red-400";     label="🔴"; }
+      const cible = period? `Période : ${period}` : `Prévision : ${forecast}`;
+      document.getElementById("fbList").insertAdjacentHTML("afterbegin",`
+        <li class="px-4 py-2 rounded mb-2 ${liClass}">
+          ${label} <strong>${now}</strong> – <em>${cible}</em><br/>
+          ${comment}
+        </li>`);
+      document.getElementById("fbStatus").classList.remove("hidden");
+      setTimeout(()=> document.getElementById("fbStatus").classList.add("hidden"),3000);
+      document.getElementById("fbComment").value="";
+      document.getElementById("fbPeriod").value="";
+    }
+
+    // 10) Utilisateurs
+    function addUser(){
+      const name = document.getElementById("userName").value.trim();
+      const email= document.getElementById("userEmail").value.trim();
+      const role = document.getElementById("userRole").value;
+      if(!name||!email){ alert("Nom et email requis."); return;}
+      const now = new Date().toLocaleString();
+      document.getElementById("userTable").insertAdjacentHTML("afterbegin",
+        `<tr><td class="px-3 py-1">${name}</td><td>${email}</td><td>${role}</td><td>${now}</td></tr>`);
+      document.getElementById("userLog").insertAdjacentHTML("afterbegin",
+        `<li>👤 ${name} (${role}) ajouté le ${now}</li>`);
+      document.getElementById("userStatus").classList.remove("hidden");
+      setTimeout(()=> document.getElementById("userStatus").classList.add("hidden"),3000);
+      document.getElementById("userName").value="";
+      document.getElementById("userEmail").value="";
+    }
+
+    // 11) Navigation & init
+    document.querySelectorAll(".nav-item").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        document.querySelectorAll("main > section").forEach(s=>s.classList.add("hidden"));
+        document.getElementById(btn.dataset.section).classList.remove("hidden");
+        document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+        btn.classList.add("active");
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    });
+    window.addEventListener("DOMContentLoaded",()=>{
+      rebuildIndicatorSelect();
+      filterKpiCards();
+      updateMainChart(); updateMultiChart(); updateCausal();
+    });
+    document.getElementById("selectIndicator").addEventListener("change",updateMainChart);
+    document.getElementById("selectPeriod").addEventListener("change",()=>{ updateMainChart(); updateMultiChart(); });
+    document.getElementById("refreshNews").addEventListener("click",()=>alert("Actualisation…"));
+
+    // Gestion de la connexion et vérification d'authentification
+    function checkAuth() {
+        const token = localStorage.getItem('token');
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        
+        if (!token || !isLoggedIn) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Vérifier la validité du token avec l'API
+        verifyToken(token);
+    }
+    
+    // Vérifier la validité du token avec l'API
+    async function verifyToken(token) {
+        try {
+            const response = await fetch('http://localhost:5000/api/indicators', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // Token valide, afficher les informations utilisateur
+                displayUserInfo();
+                // Charger les indicateurs depuis l'API
+                loadIndicatorsFromAPI(token);
+            } else {
+                // Token invalide, rediriger vers la connexion
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        } catch (error) {
+            console.error('Erreur de vérification du token:', error);
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    }
+    
+    // Afficher les informations de l'utilisateur
+    function displayUserInfo() {
+        const userEmail = localStorage.getItem('userEmail');
+        const userRole = localStorage.getItem('userRole');
+        const userFirstName = localStorage.getItem('userFirstName');
+        const userLastName = localStorage.getItem('userLastName');
+        
+        if (userEmail && userRole) {
+            document.getElementById('userEmail').textContent = userEmail;
+            document.getElementById('userRole').textContent = userRole;
+            
+            // Appliquer les couleurs selon le rôle
+            const roleElement = document.getElementById('userRole');
+            if (userRole === 'admin') {
+                roleElement.className = 'bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
+            } else {
+                roleElement.className = 'bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
+            }
+            
+            // Afficher le nom complet si disponible
+            if (userFirstName && userLastName) {
+                const userNameElement = document.getElementById('userName');
+                if (userNameElement) {
+                    userNameElement.textContent = `${userFirstName} ${userLastName}`;
+                }
+            }
+        }
+    }
+    
+    // Charger les indicateurs depuis l'API
+    async function loadIndicatorsFromAPI(token) {
+        try {
+            const response = await fetch('http://localhost:5000/api/indicators', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const indicators = await response.json();
+                updateDashboardWithAPI(indicators);
+            } else {
+                console.error('Erreur lors du chargement des indicateurs:', response.statusText);
+                // Utiliser les données locales en cas d'erreur
+                initializeDashboard();
+            }
+        } catch (error) {
+            console.error('Erreur de connexion à l\'API:', error);
+            // Utiliser les données locales en cas d'erreur
+            initializeDashboard();
+        }
+    }
+    
+    // Mettre à jour le dashboard avec les données de l'API
+    function updateDashboardWithAPI(indicators) {
+        // Mettre à jour les KPI cards avec les données de l'API
+        indicators.forEach(indicator => {
+            const card = document.querySelector(`[data-indicator="${indicator.code}"]`);
+            if (card) {
+                // Mettre à jour la valeur actuelle
+                const valueElement = card.querySelector('.text-2xl');
+                if (valueElement) {
+                    valueElement.textContent = indicator.current_value;
+                }
+                
+                // Mettre à jour le pourcentage de changement
+                const changeElement = card.querySelector('.text-sm');
+                if (changeElement) {
+                    const changeText = indicator.change_percent >= 0 ? 
+                        `+${indicator.change_percent}%` : 
+                        `${indicator.change_percent}%`;
+                    changeElement.textContent = changeText;
+                    
+                    // Appliquer la couleur selon le changement
+                    if (indicator.change_percent > 0) {
+                        changeElement.className = 'text-sm text-green-600';
+                    } else if (indicator.change_percent < 0) {
+                        changeElement.className = 'text-sm text-red-600';
+                    } else {
+                        changeElement.className = 'text-sm text-gray-600';
+                    }
+                }
+                
+                // Mettre à jour le sparkline avec l'historique de l'API
+                if (indicator.history && indicator.history['12m']) {
+                    updateSparkline(card, indicator.history['12m']);
+                }
+            }
+        });
+        
+        // Mettre à jour le sélecteur d'indicateurs
+        updateIndicatorSelector(indicators);
+    }
+    
+    // Mettre à jour le sélecteur d'indicateurs
+    function updateIndicatorSelector(indicators) {
+        const select = document.getElementById('selectIndicator');
+        if (select) {
+            select.innerHTML = '';
+            
+            indicators.forEach(indicator => {
+                const option = document.createElement('option');
+                option.value = indicator.code;
+                option.textContent = indicator.name;
+                select.appendChild(option);
+            });
+        }
+    }
+    
+    // Mettre à jour un sparkline avec les données de l'API
+    function updateSparkline(card, historyData) {
+        const canvas = card.querySelector('canvas');
+        if (canvas && historyData && historyData.length > 0) {
+            const ctx = canvas.getContext('2d');
+            const values = historyData.map(item => item.value);
+            const labels = historyData.map(item => item.date);
+            
+            // Créer le graphique Chart.js
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        borderColor: '#615798',
+                        backgroundColor: 'rgba(97, 87, 152, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    },
+                    elements: {
+                        point: { radius: 0 }
+                    }
+                }
+            });
+        }
+    }
+
+    function logout() {
+      // Effacer les données de connexion
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('authToken');
+      
+      // Rediriger vers la page de connexion
+      window.location.href = 'login.html';
+    }
+
+    // Fonction pour rediriger vers la bonne page selon le rôle
+    function redirectBasedOnRole(role) {
+      if (role === 'admin_secondaire') {
+        window.location.href = 'index2.html';
+      } else {
+        // admin_principal et analyste restent sur index.html
+        window.location.href = 'index.html';
+      }
+    }
+
+    // Vérifier l'authentification au chargement de la page
+    window.addEventListener('DOMContentLoaded', function() {
+      checkAuth();
+      updateMainChart(); 
+      updateMultiChart(); 
+      updateCausal();
+    });
+  </script>
+
+</body>
+</html>

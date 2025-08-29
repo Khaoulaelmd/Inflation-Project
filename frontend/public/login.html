@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title data-i18n="login_title">Connexion - Bureau de gestion d'Inflation</title>
+  <script src="assets/js/i18n.js"></script>
+
+  <!-- Google Font Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --color-bg: #ECF0F1;              /* fond global */
+      --color-card: #FFFFFF;            /* fond cartes */
+      --color-primary: #394b76;         /* texte principal & sidebar */
+      --color-secondary: #16A085;       /* boutons et highlights */
+      --color-accent: #615798;          /* accents (sparklines) */
+      --color-muted: #7F8C8D;           /* textes secondaires */
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--color-bg);
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="%23E2E8F0" stroke-width="0.5" opacity="0.3"/></pattern><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23CBD5E1" opacity="0.2"/></pattern></defs><rect width="100%" height="100%" fill="%23ECF0F1"/><rect width="100%" height="100%" fill="url(%23grid)"/><rect width="100%" height="100%" fill="url(%23dots)"/><g opacity="0.1"><circle cx="200" cy="150" r="80" fill="%2316A085"/><circle cx="1000" cy="300" r="120" fill="%23615798"/><circle cx="300" cy="600" r="100" fill="%23394b76"/><circle cx="900" cy="650" r="60" fill="%2316A085"/></g></svg>');
+      background-attachment: fixed;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      color: var(--color-primary);
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      filter: brightness(0.4) contrast(1.2) saturate(0.8);
+      z-index: -2;
+    }
+    
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(57, 75, 118, 0.8) 0%, rgba(97, 87, 152, 0.8) 100%);
+      z-index: -1;
+    }
+    
+    .login-card {
+      background-color: var(--color-card);
+      border-radius: 0.75rem;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3), 0 10px 20px rgba(0,0,0,0.2);
+      overflow: hidden;
+      width: 100%;
+      max-width: 450px;
+      position: relative;
+      z-index: 10;
+      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .login-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 15px 30px rgba(0,0,0,0.3);
+    }
+    
+    .form-input {
+      border: 2px solid #E2E8F0;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .form-input:focus {
+      border-color: var(--color-secondary);
+      box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
+      outline: none;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-accent) 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(22, 160, 133, 0.3);
+    }
+    
+    .role-selector {
+      display: flex;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    
+    .role-option {
+      flex: 1;
+      padding: 1rem;
+      border: 2px solid #E2E8F0;
+      border-radius: 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .role-option:hover {
+      border-color: var(--color-secondary);
+      background-color: rgba(22, 160, 133, 0.05);
+    }
+    
+    .role-option.selected {
+      border-color: var(--color-secondary);
+      background-color: var(--color-secondary);
+      color: white;
+    }
+    
+    .error-message {
+      background-color: #FEE2E2;
+      border: 1px solid #FCA5A5;
+      color: #DC2626;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+      display: none;
+    }
+    
+    .logo-container {
+      position: relative;
+      z-index: 2;
+    }
+    
+    .logo-container::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-accent) 100%);
+      z-index: -1;
+      border-radius: 50%;
+      opacity: 0.8;
+    }
+    
+    /* Particules flottantes en arrière-plan */
+    .floating-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      animation: float-particle 8s infinite linear;
+    }
+    
+    .particle:nth-child(1) {
+      width: 4px;
+      height: 4px;
+      top: 20%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+    
+    .particle:nth-child(2) {
+      width: 6px;
+      height: 6px;
+      top: 60%;
+      right: 15%;
+      animation-delay: 2s;
+    }
+    
+    .particle:nth-child(3) {
+      width: 3px;
+      height: 3px;
+      bottom: 30%;
+      left: 20%;
+      animation-delay: 4s;
+    }
+    
+    .particle:nth-child(4) {
+      width: 5px;
+      height: 5px;
+      top: 40%;
+      right: 25%;
+      animation-delay: 6s;
+    }
+    
+    @keyframes float-particle {
+      0% {
+        transform: translateY(0px) translateX(0px);
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100px) translateX(50px);
+        opacity: 0;
+      }
+    }
+    
+    /* Amélioration des champs de formulaire */
+    .form-input {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+    }
+    
+    .form-input:focus {
+      border-color: var(--color-secondary);
+      box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.2);
+      outline: none;
+      background: rgba(255, 255, 255, 1);
+      transform: translateY(-2px);
+    }
+
+    /* Top nav bar spacing helper */
+    .page-offset { padding-top: 56px; }
+  </style>
+</head>
+<body class="page-offset">
+  <!-- Top NAV (cohérent) -->
+  <div class="fixed top-0 left-0 right-0 bg-[#394b76] text-white text-sm z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="space-x-4">
+        <a href="home.html" class="hover:underline" data-i18n="nav_home">Home</a>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div id="langSwitcher"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Particules flottantes en arrière-plan -->
+  <div class="floating-particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+  
+  <div class="login-card p-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="logo-container w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-chart-line text-white text-2xl"></i>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-800 mb-2">Bureau de Gestion d'Inflation</h1>
+      <p class="text-gray-600">Connectez-vous à votre compte</p>
+    </div>
+
+    <!-- Formulaire de connexion -->
+    <form id="loginForm" class="space-y-6">
+      <!-- Email -->
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+          <i class="fas fa-envelope mr-2 text-gray-500"></i><span data-i18n="email_label">Adresse email</span>
+        </label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          class="form-input w-full" 
+          placeholder="votre@email.com"
+          required
+        />
+      </div>
+
+      <!-- Mot de passe -->
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+          <i class="fas fa-lock mr-2 text-gray-500"></i><span data-i18n="password_label">Mot de passe</span>
+        </label>
+        <div class="relative">
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-input w-full pr-12" 
+            placeholder="••••••••"
+            required
+          />
+          <button 
+            type="button" 
+            id="togglePassword" 
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="text-right mt-2">
+          <a href="#" id="forgotPasswordLink" class="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+            <i class="fas fa-key mr-1"></i><span data-i18n="forgot_password">Mot de passe oublié ?</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Sélection du rôle -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-3">
+          <i class="fas fa-user-tag mr-2 text-gray-500"></i><span data-i18n="role_select">Sélectionnez votre rôle</span>
+        </label>
+        <div class="role-selector">
+          <div class="role-option" data-role="admin_principal">
+            <i class="fas fa-user-shield text-xl mb-2"></i>
+            <div class="font-medium">Admin Principal</div>
+            <div class="text-sm text-gray-500">Accès complet</div>
+          </div>
+          <div class="role-option" data-role="admin_secondaire">
+            <i class="fas fa-user-cog text-xl mb-2"></i>
+            <div class="font-medium">Admin Secondaire</div>
+            <div class="text-sm text-gray-500">Gestion des analystes</div>
+          </div>
+          <div class="role-option" data-role="analyste">
+            <i class="fas fa-chart-bar text-xl mb-2"></i>
+            <div class="font-medium">Analyste</div>
+            <div class="text-sm text-gray-500">Accès limité</div>
+          </div>
+        </div>
+        <input type="hidden" id="selectedRole" name="role" required />
+      </div>
+
+      <!-- Message d'erreur -->
+      <div id="errorMessage" class="error-message">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <span id="errorText"></span>
+      </div>
+
+      <!-- Bouton de connexion -->
+      <button 
+        type="submit" 
+        class="btn-primary w-full py-3 px-4 text-white font-semibold rounded-lg"
+      >
+        <i class="fas fa-sign-in-alt mr-2"></i><span data-i18n="login_btn">Se connecter</span>
+      </button>
+    </form>
+
+    <!-- Lien vers l'inscription -->
+    <div class="text-center mt-6 pt-6 border-t border-gray-200">
+      <p class="text-sm text-gray-600">
+        <span data-i18n="no_account">Vous n'avez pas de compte ?</span> 
+        <a href="signup.html" class="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors">
+          <i class="fas fa-user-plus mr-1"></i>Join&nbsp;Us
+        </a>
+      </p>
+    </div>
+
+    <!-- Informations de connexion -->
+    <div class="text-center mt-6 pt-6 border-t border-gray-200">
+      <p class="text-sm text-gray-600">
+        © 2025 – Prévision Intelligente
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Rendre le sélecteur de langue
+    I18N && I18N.renderSwitcher(document.getElementById('langSwitcher'));
+    // Sélection du rôle
+    document.querySelectorAll('.role-option').forEach(option => {
+      option.addEventListener('click', function() {
+        // Retirer la sélection précédente
+        document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('selected'));
+        // Ajouter la sélection à l'option cliquée
+        this.classList.add('selected');
+        // Mettre à jour le champ caché
+        document.getElementById('selectedRole').value = this.dataset.role;
+      });
+    });
+
+    // Toggle du mot de passe
+    document.getElementById('togglePassword').addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      const icon = this.querySelector('i');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+
+    // Gestion du formulaire de connexion
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const role = document.getElementById('selectedRole').value;
+        
+        if (!email || !password || !role) {
+            showError('Veuillez remplir tous les champs.');
+            return;
+        }
+        
+        try {
+            // Appel à l'API Flask
+            const response = await fetch('http://localhost:5000/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Vérifier que le rôle correspond
+                if (data.user.role === role) {
+                    // Stocker le token et les informations utilisateur
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userEmail', data.user.email);
+                    localStorage.setItem('userRole', data.user.role);
+                    localStorage.setItem('userId', data.user.id);
+                    localStorage.setItem('userFirstName', data.user.first_name);
+                    localStorage.setItem('userLastName', data.user.last_name);
+                    
+                    showSuccess('Connexion réussie ! Redirection...');
+                    
+                    // Rediriger vers la bonne page selon le rôle
+                    setTimeout(() => {
+                        if (data.user.role === 'admin_secondaire') {
+                            window.location.href = 'index2.html';
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1500);
+                } else {
+                    showError('Le rôle sélectionné ne correspond pas à votre compte.');
+                }
+            } else {
+                showError(data.message || 'Erreur de connexion');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            showError('Erreur de connexion au serveur. Vérifiez que le backend est démarré.');
+        }
+    });
+    
+    // Fonction pour récupérer le mot de passe oublié
+    async function forgotPassword(email) {
+        try {
+            const response = await fetch('http://localhost:5000/api/forgot-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                return { success: true, message: data.message };
+            } else {
+                return { success: false, message: data.message };
+            }
+        } catch (error) {
+            return { success: false, message: 'Erreur de connexion au serveur' };
+        }
+    }
+
+    // Affichage des erreurs
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      const errorText = document.getElementById('errorText');
+      errorText.textContent = message;
+      errorDiv.style.display = 'block';
+      
+      // Masquer l'erreur après 5 secondes
+      setTimeout(() => {
+        errorDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    // Affichage des messages de succès
+    function showSuccess(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      const errorText = document.getElementById('errorText');
+      errorText.textContent = message;
+      errorDiv.className = 'bg-green-100 border border-green-300 text-green-800 p-3 rounded-md';
+      errorDiv.style.display = 'block';
+      setTimeout(() => {
+        errorDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    // Vérifier si l'utilisateur est déjà connecté
+    window.addEventListener('load', function() {
+      if (localStorage.getItem('isLoggedIn') === 'true') {
+        const userRole = localStorage.getItem('userRole');
+        if (userRole === 'admin_secondaire') {
+          window.location.href = 'index2.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      }
+    });
+
+    // Gestion du mot de passe oublié
+    document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      showForgotPasswordModal();
+    });
+
+    // Afficher le modal de mot de passe oublié
+    function showForgotPasswordModal() {
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+      modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">
+              <i class="fas fa-key mr-2 text-blue-600"></i>Réinitialiser le mot de passe
+            </h3>
+            <button class="text-gray-400 hover:text-gray-600" onclick="this.closest('.fixed').remove()">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+          <p class="text-gray-600 mb-4">
+            Entrez votre adresse email pour recevoir un lien de réinitialisation.
+          </p>
+          <form id="forgotPasswordForm" class="space-y-4">
+            <div>
+              <label for="resetEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-envelope mr-2 text-gray-500"></i>Adresse email
+              </label>
+              <input 
+                type="email" 
+                id="resetEmail" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="votre@email.com"
+                required
+              />
+            </div>
+            <div class="flex space-x-3">
+              <button 
+                type="submit" 
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+              >
+                <i class="fas fa-paper-plane mr-2"></i>Envoyer
+              </button>
+              <button 
+                type="button" 
+                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                onclick="this.closest('.fixed').remove()"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
+          <div id="resetMessage" class="mt-4 p-3 rounded-md hidden"></div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Gestion du formulaire de réinitialisation
+      document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('resetEmail').value;
+        
+        if (email) {
+          const response = await forgotPassword(email);
+          const messageDiv = document.getElementById('resetMessage');
+          if (response.success) {
+            messageDiv.className = 'mt-4 p-3 rounded-md bg-green-100 border border-green-300 text-green-800';
+            messageDiv.innerHTML = `
+              <i class="fas fa-check-circle mr-2"></i>
+              ${response.message}
+            `;
+          } else {
+            messageDiv.className = 'mt-4 p-3 rounded-md bg-red-100 border border-red-300 text-red-800';
+            messageDiv.innerHTML = `
+              <i class="fas fa-times-circle mr-2"></i>
+              ${response.message}
+            `;
+          }
+          messageDiv.classList.remove('hidden');
+          
+          // Fermer le modal après 3 secondes
+          setTimeout(() => {
+            modal.remove();
+          }, 3000);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

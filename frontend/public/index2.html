@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Secondaire – Bureau de gestion d'Inflation</title>
+  <script src="assets/js/i18n.js"></script>
+
+  <!-- Google Font Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" rel="stylesheet"/>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --color-bg: #ECF0F1;              /* fond global */
+      --color-card: #FFFFFF;            /* fond cartes */
+      --color-primary: #394b76;         /* texte principal & sidebar */
+      --color-secondary: #16A085;       /* boutons et highlights */
+      --color-accent: #615798;          /* accents (sparklines) */
+      --color-muted: #7F8C8D;           /* textes secondaires */
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--color-bg);
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="%23E2E8F0" stroke-width="0.5" opacity="0.3"/></pattern><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23CBD5E1" opacity="0.2"/></pattern></defs><rect width="100%" height="100%" fill="%23ECF0F1"/><rect width="100%" height="100%" fill="url(%23grid)"/><rect width="100%" height="100%" fill="url(%23dots)"/><g opacity="0.1"><circle cx="200" cy="150" r="80" fill="%2316A085"/><circle cx="1000" cy="300" r="120" fill="%23615798"/><circle cx="300" cy="600" r="100" fill="%23394b76"/><circle cx="900" cy="650" r="60" fill="%2316A085"/></g></svg>');
+      background-attachment: fixed;
+      background-size: cover;
+      color: var(--color-primary);
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(236, 240, 241, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+      z-index: -1;
+    }
+    .card {
+      background-color: var(--color-card);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+    .sidebar {
+  background-color: var(--color-primary);
+}
+
+/* ← Règle à METTRE À JOUR ICI */
+.sidebar .nav-item {
+  display: block;       /* force le plein conteneur */
+  width: 100%;          /* 100% de la largeur parent */
+  text-align: left;     /* alignement à gauche */
+  padding: 0.75rem 1.5rem;
+  color: #fff;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.sidebar .nav-item:hover {
+  background-color: var(--color-secondary);
+}
+
+.sidebar .nav-item.active {
+  background-color: var(--color-secondary);
+  border-left: 4px solid var(--color-accent);
+}
+
+    .text-muted    { color: var(--color-muted); }
+    .text-secondary{ color: var(--color-secondary); }
+    .text-accent   { color: var(--color-accent); }
+    .bg-primary    { background-color: var(--color-primary); }
+    .bg-secondary  { background-color: var(--color-secondary); }
+    .hover\:bg-secondary-dark:hover { background-color: #12856e; } /* un peu plus foncé */
+  </style>
+</head>
+<body class="flex h-screen antialiased">
+
+  <div class="fixed top-4 right-4 z-50" id="langSwitcher"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 sidebar flex flex-col">
+    <h1 class="px-6 py-5 text-xl font-bold border-b border-white/20 text-white" data-i18n="app_title">Admin Secondaire</h1>
+    <nav class="flex-1 py-4">
+      <button class="nav-item active" data-section="dashboard" data-i18n="nav_dashboard">Tableau de bord</button>
+      <button class="nav-item" data-section="analystes" data-i18n="nav_analystes">Gestion des Analystes</button>
+      <button class="nav-item" data-section="reports" data-i18n="nav_reports">Rapports</button>
+      <button class="nav-item" data-section="settings" data-i18n="nav_settings">Paramètres</button>
+    </nav>
+    
+    <!-- User info -->
+    <div class="p-4 border-t border-white/20">
+      <div class="flex items-center text-white">
+        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+          <i class="fas fa-user-cog"></i>
+        </div>
+        <div>
+          <div class="font-medium" id="userName">Admin Secondaire</div>
+          <div class="text-sm opacity-75" id="userRole">Gestion des analystes</div>
+        </div>
+      </div>
+      <button id="logoutBtn" class="w-full mt-3 text-left text-white/80 hover:text-white transition-colors">
+        <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 overflow-auto">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-gray-800" id="pageTitle">Tableau de bord</h2>
+        <div class="flex items-center space-x-4">
+          <div class="hidden sm:flex items-center space-x-2 mr-2">
+            <button onclick="switchLanguage('fr')" class="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700">FR</button>
+            <button onclick="switchLanguage('en')" class="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700">EN</button>
+            <button onclick="switchLanguage('ar')" class="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700">AR</button>
+          </div>
+          <button class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-bell text-xl"></i>
+          </button>
+          <button class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-cog text-xl"></i>
+          </button>
+          <button id="logoutTop" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded" onclick="window.location.href='login.html'">Déconnexion</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="p-6">
+      <!-- Dashboard Section -->
+      <div id="dashboard-section" class="section active">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <!-- Statistiques -->
+          <div class="card">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-muted text-sm">Total Analystes</p>
+                <p class="text-2xl font-bold" id="totalAnalystes">24</p>
+              </div>
+              <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-users text-blue-600 text-xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-muted text-sm">Analystes Actifs</p>
+                <p class="text-2xl font-bold text-green-600" id="analystesActifs">21</p>
+              </div>
+              <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-user-check text-green-600 text-xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-muted text-sm">Analystes Inactifs</p>
+                <p class="text-2xl font-bold text-red-600" id="analystesInactifs">3</p>
+              </div>
+              <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-user-times text-red-600 text-xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-muted text-sm">Nouveaux ce mois</p>
+                <p class="text-2xl font-bold text-purple-600" id="nouveauxAnalystes">5</p>
+              </div>
+              <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-user-plus text-purple-600 text-xl"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Graphique d'activité -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Activité des Analystes</h3>
+            <canvas id="activityChart" width="400" height="200"></canvas>
+          </div>
+          
+          <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Répartition par Département</h3>
+            <canvas id="departmentChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Dernières activités -->
+        <div class="card">
+          <h3 class="text-lg font-semibold mb-4">Dernières Activités</h3>
+          <div class="space-y-4">
+            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-user-plus text-blue-600"></i>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium">Nouvel analyste ajouté</p>
+                <p class="text-sm text-muted">Ahmed Benali a été ajouté au département Analyse</p>
+              </div>
+              <span class="text-sm text-muted">Il y a 2h</span>
+            </div>
+            
+            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-user-check text-green-600"></i>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium">Analyste activé</p>
+                <p class="text-sm text-muted">Fatima Zahra a été réactivée</p>
+              </div>
+              <span class="text-sm text-muted">Il y a 4h</span>
+            </div>
+            
+            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-user-edit text-yellow-600"></i>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium">Profil mis à jour</p>
+                <p class="text-sm text-muted">Les informations de Karim Alami ont été modifiées</p>
+              </div>
+              <span class="text-sm text-muted">Il y a 6h</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gestion des Analystes Section -->
+      <div id="analystes-section" class="section hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">Gestion des Analystes</h2>
+          <button id="addAnalysteBtn" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+            <i class="fas fa-plus mr-2"></i>Ajouter un Analyste
+          </button>
+        </div>
+
+        <!-- Filtres -->
+        <div class="card mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+              <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+                <option value="">Tous</option>
+                <option value="actif">Actif</option>
+                <option value="inactif">Inactif</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Département</label>
+              <select id="departmentFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+                <option value="">Tous</option>
+                <option value="analyse">Analyse</option>
+                <option value="prevision">Prévision</option>
+                <option value="surveillance">Surveillance</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Recherche</label>
+              <input type="text" id="searchInput" placeholder="Nom, email..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+            </div>
+            <div class="flex items-end">
+              <button id="resetFilters" class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau des analystes -->
+        <div class="card">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-gray-200">
+                  <th class="text-left py-3 px-4 font-medium">Nom</th>
+                  <th class="text-left py-3 px-4 font-medium">Email</th>
+                  <th class="text-left py-3 px-4 font-medium">Département</th>
+                  <th class="text-left py-3 px-4 font-medium">Statut</th>
+                  <th class="text-left py-3 px-4 font-medium">Date d'ajout</th>
+                  <th class="text-left py-3 px-4 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="analystesTableBody">
+                <!-- Les données seront chargées dynamiquement -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reports Section -->
+      <div id="reports-section" class="section hidden">
+        <h2 class="text-2xl font-bold mb-6">Rapports</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Rapport d'activité</h3>
+            <p class="text-muted mb-4">Générer un rapport sur l'activité des analystes</p>
+            <button class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+              Générer
+            </button>
+          </div>
+          
+          <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Rapport de performance</h3>
+            <p class="text-muted mb-4">Évaluer la performance des analystes</p>
+            <button class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+              Générer
+            </button>
+          </div>
+          
+          <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Rapport mensuel</h3>
+            <p class="text-muted mb-4">Résumé mensuel des activités</p>
+            <button class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+              Générer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Section -->
+      <div id="settings-section" class="section hidden">
+        <h2 class="text-2xl font-bold mb-6">Paramètres</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Paramètres du compte</h3>
+            <form class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nom complet</label>
+                <input type="text" value="Admin Secondaire" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input type="email" value="admin.secondaire@bgi.gov.ma" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+              </div>
+              <button type="submit" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+                Sauvegarder
+              </button>
+            </form>
+          </div>
+          
+          <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Sécurité</h3>
+            <form class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ancien mot de passe</label>
+                <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nouveau mot de passe</label>
+                <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmer le mot de passe</label>
+                <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+              </div>
+              <button type="submit" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+                Changer le mot de passe
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal pour ajouter/modifier un analyste -->
+  <div id="analysteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-lg max-w-md w-full">
+        <div class="flex justify-between items-center p-6 border-b">
+          <h3 class="text-lg font-semibold" id="modalTitle">Ajouter un Analyste</h3>
+          <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <form id="analysteForm" class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
+            <input type="text" id="firstName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+            <input type="text" id="lastName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input type="email" id="email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Département</label>
+            <select id="department" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+              <option value="">Sélectionner un département</option>
+              <option value="analyse">Analyse</option>
+              <option value="prevision">Prévision</option>
+              <option value="surveillance">Surveillance</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+            <select id="status" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+              <option value="actif">Actif</option>
+              <option value="inactif">Inactif</option>
+            </select>
+          </div>
+          
+          <div class="flex justify-end space-x-3 pt-4">
+            <button type="button" id="cancelBtn" class="px-4 py-2 text-gray-600 hover:text-gray-800">Annuler</button>
+            <button type="submit" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+              Sauvegarder
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Données des analystes (simulation)
+    let analystes = [
+      { id: 1, firstName: 'Ahmed', lastName: 'Benali', email: 'ahmed.benali@bgi.gov.ma', department: 'analyse', status: 'actif', dateAdded: '2025-08-15' },
+      { id: 2, firstName: 'Fatima', lastName: 'Zahra', email: 'fatima.zahra@bgi.gov.ma', department: 'prevision', status: 'actif', dateAdded: '2025-08-10' },
+      { id: 3, firstName: 'Karim', lastName: 'Alami', email: 'karim.alami@bgi.gov.ma', department: 'surveillance', status: 'inactif', dateAdded: '2025-08-05' },
+      { id: 4, firstName: 'Amina', lastName: 'Tazi', email: 'amina.tazi@bgi.gov.ma', department: 'analyse', status: 'actif', dateAdded: '2025-08-01' },
+      { id: 5, firstName: 'Hassan', lastName: 'El Fassi', email: 'hassan.elfassi@bgi.gov.ma', department: 'prevision', status: 'actif', dateAdded: '2025-07-28' }
+    ];
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        const section = this.dataset.section;
+        
+        // Mettre à jour la navigation active
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Afficher la section correspondante
+        document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(section + '-section').classList.remove('hidden');
+        
+        // Mettre à jour le titre de la page
+        document.getElementById('pageTitle').textContent = this.textContent;
+        
+        // Charger les données si nécessaire
+        if (section === 'analystes') {
+          loadAnalystes();
+        }
+      });
+    });
+
+    // Charger les analystes
+    function loadAnalystes() {
+      const tbody = document.getElementById('analystesTableBody');
+      tbody.innerHTML = '';
+      
+      analystes.forEach(analyste => {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-gray-200 hover:bg-gray-50';
+        row.innerHTML = `
+          <td class="py-3 px-4">${analyste.firstName} ${analyste.lastName}</td>
+          <td class="py-3 px-4">${analyste.email}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-1 text-xs rounded-full ${getDepartmentColor(analyste.department)}">
+              ${analyste.department}
+            </span>
+          </td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-1 text-xs rounded-full ${analyste.status === 'actif' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+              ${analyste.status}
+            </span>
+          </td>
+          <td class="py-3 px-4">${analyste.dateAdded}</td>
+          <td class="py-3 px-4">
+            <button onclick="editAnalyste(${analyste.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deleteAnalyste(${analyste.id})" class="text-red-600 hover:text-red-800">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function getDepartmentColor(department) {
+      const colors = {
+        'analyse': 'bg-blue-100 text-blue-800',
+        'prevision': 'bg-purple-100 text-purple-800',
+        'surveillance': 'bg-orange-100 text-orange-800'
+      };
+      return colors[department] || 'bg-gray-100 text-gray-800';
+    }
+
+    // Modal pour ajouter/modifier un analyste
+    document.getElementById('addAnalysteBtn').addEventListener('click', () => {
+      document.getElementById('modalTitle').textContent = 'Ajouter un Analyste';
+      document.getElementById('analysteForm').reset();
+      document.getElementById('analysteModal').classList.remove('hidden');
+    });
+
+    document.getElementById('closeModal').addEventListener('click', () => {
+      document.getElementById('analysteModal').classList.add('hidden');
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      document.getElementById('analysteModal').classList.add('hidden');
+    });
+
+    // Gestion du formulaire
+    document.getElementById('analysteForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const formData = {
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        email: document.getElementById('email').value,
+        department: document.getElementById('department').value,
+        status: document.getElementById('status').value,
+        dateAdded: new Date().toISOString().split('T')[0]
+      };
+      
+      // Ajouter l'analyste (simulation)
+      formData.id = analystes.length + 1;
+      analystes.push(formData);
+      
+      // Fermer le modal et recharger
+      document.getElementById('analysteModal').classList.add('hidden');
+      loadAnalystes();
+      
+      // Mettre à jour les statistiques
+      updateStats();
+    });
+
+    function editAnalyste(id) {
+      const analyste = analystes.find(a => a.id === id);
+      if (analyste) {
+        document.getElementById('modalTitle').textContent = 'Modifier un Analyste';
+        document.getElementById('firstName').value = analyste.firstName;
+        document.getElementById('lastName').value = analyste.lastName;
+        document.getElementById('email').value = analyste.email;
+        document.getElementById('department').value = analyste.department;
+        document.getElementById('status').value = analyste.status;
+        document.getElementById('analysteModal').classList.remove('hidden');
+      }
+    }
+
+    function deleteAnalyste(id) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cet analyste ?')) {
+        analystes = analystes.filter(a => a.id !== id);
+        loadAnalystes();
+        updateStats();
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('totalAnalystes').textContent = analystes.length;
+      document.getElementById('analystesActifs').textContent = analystes.filter(a => a.status === 'actif').length;
+      document.getElementById('analystesInactifs').textContent = analystes.filter(a => a.status === 'inactif').length;
+      document.getElementById('nouveauxAnalystes').textContent = analystes.filter(a => {
+        const date = new Date(a.dateAdded);
+        const now = new Date();
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      }).length;
+    }
+
+    // Déconnexion (sidebar)
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        window.location.href = 'login.html';
+      }
+    });
+
+    // Déconnexion (top header)
+    document.getElementById('logoutTop').addEventListener('click', () => {
+      window.location.href = 'login.html';
+    });
+
+    // Initialisation
+    updateStats();
+    
+    // Graphiques (simulation)
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    new Chart(activityCtx, {
+      type: 'line',
+      data: {
+        labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+        datasets: [{
+          label: 'Connexions',
+          data: [12, 19, 15, 25, 22, 18, 14],
+          borderColor: '#16A085',
+          backgroundColor: 'rgba(22, 160, 133, 0.1)',
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+
+    const departmentCtx = document.getElementById('departmentChart').getContext('2d');
+    new Chart(departmentCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Analyse', 'Prévision', 'Surveillance'],
+        datasets: [{
+          data: [12, 8, 4],
+          backgroundColor: ['#16A085', '#615798', '#394b76']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
+    });
+
+    function switchLanguage(lang){ I18N && I18N.setLang && I18N.setLang(lang); }
+    I18N && I18N.applyI18n && I18N.applyI18n();
+  </script>
+</body>
+</html>

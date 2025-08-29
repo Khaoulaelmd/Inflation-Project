@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Demande d'accès - Bureau de gestion d'Inflation</title>
+    <script src="assets/js/i18n.js"></script>
+
+    <!-- Google Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" rel="stylesheet"/>
+
+    <style>
+        :root {
+            --color-bg: #ECF0F1;              /* fond global */
+            --color-card: #FFFFFF;            /* fond cartes */
+            --color-primary: #394b76;         /* texte principal & sidebar */
+            --color-secondary: #16A085;       /* boutons et highlights */
+            --color-accent: #615798;          /* accents (sparklines) */
+            --color-muted: #7F8C8D;           /* textes secondaires */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg);
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="%23E2E8F0" stroke-width="0.5" opacity="0.3"/></pattern><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23CBD5E1" opacity="0.2"/></pattern></defs><rect width="100%" height="100%" fill="%23ECF0F1"/><rect width="100%" height="100%" fill="url(%23grid)"/><rect width="100%" height="100%" fill="url(%23dots)"/><g opacity="0.1"><circle cx="200" cy="150" r="80" fill="%2316A085"/><circle cx="1000" cy="300" r="120" fill="%23615798"/><circle cx="300" cy="600" r="100" fill="%23394b76"/><circle cx="900" cy="650" r="60" fill="%2316A085"/></g></svg>');
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            color: var(--color-primary);
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: brightness(0.4) contrast(1.2) saturate(0.8);
+            z-index: -2;
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(57, 75, 118, 0.8) 0%, rgba(97, 87, 152, 0.8) 100%);
+            z-index: -1;
+        }
+        
+        .signup-card {
+            background-color: var(--color-card);
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3), 0 10px 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .signup-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 15px 30px rgba(0,0,0,0.3);
+        }
+        
+        .form-input {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-input:focus {
+            border-color: var(--color-secondary);
+            box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.2);
+            outline: none;
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-accent) 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(22, 160, 133, 0.3);
+        }
+        
+        .role-selector {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .role-option {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #E2E8F0;
+            border-radius: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .role-option:hover {
+            border-color: var(--color-secondary);
+            background-color: rgba(22, 160, 133, 0.05);
+        }
+        
+        .role-option.selected {
+            border-color: var(--color-secondary);
+            background-color: var(--color-secondary);
+            color: white;
+        }
+        
+        .error-message {
+            background-color: #FEE2E2;
+            border: 1px solid #FCA5A5;
+            color: #DC2626;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: #D1FAE5;
+            border: 1px solid #A7F3D0;
+            color: #065F46;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .logo-container {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .logo-container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-accent) 100%);
+            z-index: -1;
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+        
+        .password-strength {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .strength-bar {
+            height: 4px;
+            background-color: #E5E7EB;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+        
+        .strength-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        .strength-weak { width: 25%; background-color: #EF4444; }
+        .strength-fair { width: 50%; background-color: #F59E0B; }
+        .strength-good { width: 75%; background-color: #10B981; }
+        .strength-strong { width: 100%; background-color: #059669; }
+        
+        .link-switch {
+            color: var(--color-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .link-switch:hover {
+            color: var(--color-accent);
+            text-decoration: underline;
+        }
+
+        .page-offset { padding-top: 56px; }
+    </style>
+</head>
+<body class="page-offset">
+    <!-- Top NAV (cohérent) -->
+    <div class="fixed top-0 left-0 right-0 bg-[#394b76] text-white text-sm z-40">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="space-x-4">
+          <a href="home.html" class="hover:underline" data-i18n="nav_home">Home</a>
+        </div>
+        <div class="flex items-center space-x-3">
+
+          <div class="flex items-center space-x-2 ml-2">
+            <button onclick="switchLanguage('fr')" class="px-2 py-1 rounded bg-white/20 hover:bg-white/30 transition-colors">FR</button>
+            <button onclick="switchLanguage('en')" class="px-2 py-1 rounded bg-white/20 hover:bg-white/30 transition-colors">EN</button>
+            <button onclick="switchLanguage('ar')" class="px-2 py-1 rounded bg-white/20 hover:bg-white/30 transition-colors">AR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="signup-card p-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="logo-container w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-file-signature text-white text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Demande d'accès</h1>
+            <p class="text-gray-600">Remplissez ce formulaire pour rejoindre la plateforme</p>
+        </div>
+
+        <!-- Formulaire de demande d'accès -->
+        <form id="signupForm" class="space-y-6">
+            <!-- Nom et Prénom -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="firstName" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2 text-gray-500"></i>Prénom
+                    </label>
+                    <input 
+                        type="text" 
+                        id="firstName" 
+                        name="firstName" 
+                        class="form-input w-full" 
+                        required
+                    />
+                </div>
+                <div>
+                    <label for="lastName" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2 text-gray-500"></i>Nom
+                    </label>
+                    <input 
+                        type="text" 
+                        id="lastName" 
+                        name="lastName" 
+                        class="form-input w-full" 
+                        required
+                    />
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-envelope mr-2 text-gray-500"></i>Adresse email
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input w-full" 
+                    required
+                />
+            </div>
+
+            <!-- Rôle souhaité -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">
+                    <i class="fas fa-user-tag mr-2 text-gray-500"></i>Rôle souhaité
+                </label>
+                <div class="role-selector">
+                    <div class="role-option" data-role="admin_principal">
+                        <i class="fas fa-user-shield text-xl mb-2"></i>
+                        <div class="font-medium">Admin Principal</div>
+                        <div class="text-sm text-gray-500">Accès complet</div>
+                    </div>
+                    <div class="role-option" data-role="admin_secondaire">
+                        <i class="fas fa-user-cog text-xl mb-2"></i>
+                        <div class="font-medium">Admin Secondaire</div>
+                        <div class="text-sm text-gray-500">Gestion des analystes</div>
+                    </div>
+                    <div class="role-option" data-role="analyste">
+                        <i class="fas fa-chart-bar text-xl mb-2"></i>
+                        <div class="font-medium">Analyste</div>
+                        <div class="text-sm text-gray-500">Accès limité</div>
+                    </div>
+                </div>
+                <input type="hidden" id="selectedRole" name="role" required />
+            </div>
+
+            <!-- Message / Motivation -->
+            <div>
+                <label for="motivation" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-comment-dots mr-2 text-gray-500"></i>Votre motivation (optionnel)
+                </label>
+                <textarea id="motivation" rows="4" class="form-input w-full" placeholder="Expliquez votre besoin et votre rôle"></textarea>
+            </div>
+
+            <!-- Bouton d'envoi -->
+            <button 
+                type="submit" 
+                class="btn-primary w-full py-3 px-4 text-white font-semibold rounded-lg"
+            >
+                <i class="fas fa-paper-plane mr-2"></i>Envoyer la demande
+            </button>
+        </form>
+
+        <!-- Lien vers la connexion -->
+        <div class="text-center mt-6 pt-6 border-t border-gray-200">
+            <p class="text-sm text-gray-600">
+                Vous avez déjà un compte ?
+                <a href="login.html" class="link-switch">Se connecter</a>
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6 text-sm text-gray-500">
+            <p>&copy; 2025 Bureau de Gestion d'Inflation</p>
+            <p class="mt-1">Système de prévision intelligente</p>
+        </div>
+    </div>
+
+    <script>
+        I18N && I18N.renderSwitcher && I18N.applyI18n && I18N.applyI18n();
+        function switchLanguage(lang){ I18N && I18N.setLang && I18N.setLang(lang); }
+        // Gestion de la sélection du rôle
+        document.querySelectorAll('.role-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('selectedRole').value = this.dataset.role;
+            });
+        });
+
+        // Soumission du formulaire (envoie une demande d'accès)
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const payload = {
+                first_name: document.getElementById('firstName').value,
+                last_name: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                role: document.getElementById('selectedRole').value,
+                motivation: document.getElementById('motivation').value
+            };
+            alert('Votre demande a été envoyée. Nous vous contacterons par email.');
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>

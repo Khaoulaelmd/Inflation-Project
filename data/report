@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Accueil - Bureau de gestion d'Inflation</title>
+  <script src="assets/js/i18n.js"></script>
+
+  <!-- Google Font Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" rel="stylesheet"/>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --color-bg: #ECF0F1;
+      --color-card: #FFFFFF;
+      --color-primary: #394b76;
+      --color-secondary: #16A085;
+      --color-accent: #615798;
+      --color-muted: #7F8C8D;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--color-bg);
+      color: var(--color-primary);
+    }
+    
+    .navbar {
+      background-color: var(--color-primary);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .card {
+      background-color: var(--color-card);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+    
+    .indicator-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .indicator-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .news-card {
+      transition: transform 0.2s ease;
+    }
+    
+    .news-card:hover {
+      transform: translateY(-3px);
+    }
+    
+    .hero-section {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+  <!-- Navigation -->
+  <nav class="navbar text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <h1 class="text-xl font-bold">Bureau de Gestion d'Inflation</h1>
+        </div>
+        
+        <div class="flex items-center space-x-6">
+          <a href="#about" class="hover:text-gray-300 transition-colors">À propos</a>
+          <a href="#contact" class="hover:text-gray-300 transition-colors">Contact</a>
+          <a href="login.html" class="bg-white text-primary px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">Connexion</a>
+          <div class="flex items-center space-x-2">
+            <button onclick="switchLanguage('fr')" class="px-2 py-1 rounded bg-white/20 hover:bg-white/30 transition-colors">FR</button>
+            <button onclick="switchLanguage('en')" class="px-2 py-1 rounded bg-white/20 hover:bg-white/30 transition-colors">EN</button>
+            <button onclick="switchLanguage('ar')" class="px-2 py-1 rounded bg-white/20 hover:bg-white/30 transition-colors">AR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section text-white py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h1 class="text-5xl font-bold mb-6">Plateforme Nationale de Gestion d'Inflation</h1>
+      <p class="text-xl mb-8 opacity-90">Surveillance, analyse et prévision des indicateurs économiques du Maroc</p>
+      <a href="login.html" class="bg-white text-primary px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors">
+        Accéder à la plateforme
+      </a>
+    </div>
+  </section>
+
+  <!-- Indicateurs Économiques -->
+  <section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-center mb-12">Indicateurs Économiques Clés</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Masse Monétaire -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Masse Monétaire</h3>
+            <i class="fas fa-coins text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">1,247.3 MMDH</div>
+          <div class="text-sm text-green-600">
+            <i class="fas fa-arrow-up"></i> +2.3% ce mois
+          </div>
+        </div>
+
+        <!-- Indice Taux de Change -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Taux de Change</h3>
+            <i class="fas fa-exchange-alt text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">10.45 MAD/USD</div>
+          <div class="text-sm text-red-600">
+            <i class="fas fa-arrow-down"></i> -0.8% ce mois
+          </div>
+        </div>
+
+        <!-- IPC -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Indice des Prix</h3>
+            <i class="fas fa-chart-line text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">108.7</div>
+          <div class="text-sm text-green-600">
+            <i class="fas fa-arrow-up"></i> +1.2% ce mois
+          </div>
+        </div>
+
+        <!-- Taux de Chômage -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Taux de Chômage</h3>
+            <i class="fas fa-user-times text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">11.2%</div>
+          <div class="text-sm text-red-600">
+            <i class="fas fa-arrow-up"></i> +0.3% ce mois
+          </div>
+        </div>
+
+        <!-- Croissance PIB -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Croissance PIB</h3>
+            <i class="fas fa-chart-area text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">3.8%</div>
+          <div class="text-sm text-green-600">
+            <i class="fas fa-arrow-up"></i> +0.2% ce trimestre
+          </div>
+        </div>
+
+        <!-- Taux d'Intérêt Réel -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Taux d'Intérêt Réel</h3>
+            <i class="fas fa-percentage text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">1.5%</div>
+          <div class="text-sm text-green-600">
+            <i class="fas fa-arrow-up"></i> +0.1% ce mois
+          </div>
+        </div>
+
+        <!-- Épargne Brute -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Épargne Brute</h3>
+            <i class="fas fa-piggy-bank text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">28.7%</div>
+          <div class="text-sm text-green-600">
+            <i class="fas fa-arrow-up"></i> +0.5% ce mois
+          </div>
+        </div>
+
+        <!-- Indice Prix Alimentaires -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Prix Alimentaires</h3>
+            <i class="fas fa-apple-alt text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">112.3</div>
+          <div class="text-sm text-red-600">
+            <i class="fas fa-arrow-up"></i> +2.1% ce mois
+          </div>
+        </div>
+
+        <!-- Pétrole Brent -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Pétrole Brent</h3>
+            <i class="fas fa-gas-pump text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">$78.45</div>
+          <div class="text-sm text-green-600">
+            <i class="fas fa-arrow-up"></i> +3.2% ce mois
+          </div>
+        </div>
+
+        <!-- Gaz Naturel -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Gaz Naturel US</h3>
+            <i class="fas fa-fire text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">$2.85</div>
+          <div class="text-sm text-red-600">
+            <i class="fas fa-arrow-down"></i> -1.8% ce mois
+          </div>
+        </div>
+
+        <!-- Cuivre -->
+        <div class="card indicator-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg">Cuivre</h3>
+            <i class="fas fa-industry text-secondary text-xl"></i>
+          </div>
+          <div class="text-2xl font-bold text-primary mb-2">$8,450</div>
+          <div class="text-sm text-green-600">
+            <i class="fas fa-arrow-up"></i> +1.7% ce mois
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Actualités Économiques -->
+  <section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-center mb-12">Actualités Économiques</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Actualité 1 -->
+        <article class="card news-card">
+          <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+               alt="Banque Centrale" class="w-full h-48 object-cover rounded-t-lg">
+          <div class="p-6">
+            <div class="text-sm text-muted mb-2">27 Août 2025</div>
+            <h3 class="font-semibold text-lg mb-3">La Banque Centrale maintient son taux directeur à 3%</h3>
+            <p class="text-muted mb-4">La Banque Al-Maghrib a décidé de maintenir son taux directeur inchangé pour soutenir la reprise économique...</p>
+            <a href="#" class="text-secondary hover:underline">Lire la suite →</a>
+          </div>
+        </article>
+
+        <!-- Actualité 2 -->
+        <article class="card news-card">
+          <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+               alt="Inflation" class="w-full h-48 object-cover rounded-t-lg">
+          <div class="p-6">
+            <div class="text-sm text-muted mb-2">26 Août 2025</div>
+            <h3 class="font-semibold text-lg mb-3">L'inflation ralentit à 2.1% en juillet</h3>
+            <p class="text-muted mb-4">Le taux d'inflation annuel a ralenti pour atteindre 2.1% en juillet, contre 2.3% en juin...</p>
+            <a href="#" class="text-secondary hover:underline">Lire la suite →</a>
+          </div>
+        </article>
+
+        <!-- Actualité 3 -->
+        <article class="card news-card">
+          <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+               alt="Croissance" class="w-full h-48 object-cover rounded-t-lg">
+          <div class="p-6">
+            <div class="text-sm text-muted mb-2">25 Août 2025</div>
+            <h3 class="font-semibold text-lg mb-3">Le PIB progresse de 3.8% au deuxième trimestre</h3>
+            <p class="text-muted mb-4">L'économie marocaine a enregistré une croissance de 3.8% au deuxième trimestre 2025...</p>
+            <a href="#" class="text-secondary hover:underline">Lire la suite →</a>
+          </div>
+        </article>
+
+        <!-- Actualité 4 -->
+        <article class="card news-card">
+          <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+               alt="Exportations" class="w-full h-48 object-cover rounded-t-lg">
+          <div class="p-6">
+            <div class="text-sm text-muted mb-2">24 Août 2025</div>
+            <h3 class="font-semibold text-lg mb-3">Les exportations marocaines en hausse de 12%</h3>
+            <p class="text-muted mb-4">Les exportations marocaines ont augmenté de 12% au cours des sept premiers mois de 2025...</p>
+            <a href="#" class="text-secondary hover:underline">Lire la suite →</a>
+          </div>
+        </article>
+
+        <!-- Actualité 5 -->
+        <article class="card news-card">
+          <img src="https://images.unsplash.com/photo-1554224154-26032cdc-304?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+               alt="Investissement" class="w-full h-48 object-cover rounded-t-lg">
+          <div class="p-6">
+            <div class="text-sm text-muted mb-2">23 Août 2025</div>
+            <h3 class="font-semibold text-lg mb-3">Nouveaux investissements dans les énergies renouvelables</h3>
+            <p class="text-muted mb-4">Le Maroc annonce de nouveaux investissements de 15 milliards de dirhams dans les énergies renouvelables...</p>
+            <a href="#" class="text-secondary hover:underline">Lire la suite →</a>
+          </div>
+        </article>
+
+        <!-- Actualité 6 -->
+        <article class="card news-card">
+          <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+               alt="Emploi" class="w-full h-48 object-cover rounded-t-lg">
+          <div class="p-6">
+            <div class="text-sm text-muted mb-2">22 Août 2025</div>
+            <h3 class="font-semibold text-lg mb-3">Création de 45,000 nouveaux emplois en juillet</h3>
+            <p class="text-muted mb-4">Le marché du travail marocain a créé 45,000 nouveaux emplois au cours du mois de juillet...</p>
+            <a href="#" class="text-secondary hover:underline">Lire la suite →</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- À propos -->
+  <section id="about" class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold mb-6">À propos du Bureau de Gestion d'Inflation</h2>
+        <p class="text-xl text-muted max-w-3xl mx-auto">
+          Le Bureau de Gestion d'Inflation est l'institution nationale responsable de la surveillance, 
+          l'analyse et la prévision des indicateurs économiques du Maroc. Notre mission est de fournir 
+          des données précises et des analyses approfondies pour soutenir la prise de décision économique.
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="bg-secondary text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-chart-line text-2xl"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Surveillance</h3>
+          <p class="text-muted">Surveillance continue des indicateurs économiques clés</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-secondary text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-brain text-2xl"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Analyse</h3>
+          <p class="text-muted">Analyse approfondie des tendances économiques</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-secondary text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-crystal-ball text-2xl"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Prévision</h3>
+          <p class="text-muted">Prévisions économiques basées sur des modèles avancés</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold mb-6">Contact</h2>
+        <p class="text-xl text-muted">Nous sommes là pour vous aider</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div>
+          <h3 class="font-semibold text-lg mb-6">Informations de contact</h3>
+          <div class="space-y-4">
+            <div class="flex items-center">
+              <i class="fas fa-map-marker-alt text-secondary w-6"></i>
+              <span class="ml-3">Avenue Mohammed V, Rabat, Maroc</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fas fa-phone text-secondary w-6"></i>
+              <span class="ml-3">+212 5 37 21 00 00</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fas fa-envelope text-secondary w-6"></i>
+              <span class="ml-3">contact@bgi.gov.ma</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fas fa-clock text-secondary w-6"></i>
+              <span class="ml-3">Lun-Ven: 8h-18h</span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold text-lg mb-6">Envoyez-nous un message</h3>
+          <form class="space-y-4">
+            <div>
+              <input type="text" placeholder="Votre nom" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+            </div>
+            <div>
+              <input type="email" placeholder="Votre email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+            </div>
+            <div>
+              <textarea placeholder="Votre message" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent"></textarea>
+            </div>
+            <button type="submit" class="bg-secondary text-white px-6 py-3 rounded-lg hover:bg-secondary-dark transition-colors">
+              Envoyer le message
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-primary text-white py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <p>&copy; 2025 Bureau de Gestion d'Inflation. Tous droits réservés.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function switchLanguage(lang) {
+      // Implémentation du changement de langue
+      console.log('Changement de langue vers:', lang);
+    }
+  </script>
+</body>
+</html>

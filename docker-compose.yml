@@ -1,0 +1,105 @@
+
+version: "3.9"
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: inflation_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: inflation_db
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3307:3306"
+    command: --default-authentication-plugin=mysql_native_password --sql-mode=""
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -proot || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: inflation_phpmyadmin
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8081:80"
+
+  backend:
+    image: python:3.11-slim
+    container_name: inflation_backend
+    working_dir: /app/backend
+    volumes:
+      - ./:/app
+    environment:
+      FLASK_APP: app.py
+      FLASK_RUN_HOST: 0.0.0.0
+      FLASK_RUN_PORT: 5000
+      DATABASE_URL: mysql+pymysql://root:root@mysql:3306/inflation_db
+      FLASK_ENV: development
+      SECRET_KEY: dev-secret
+    depends_on:
+      - mysql
+    command: sh -c "pip install -r requirements.txt && pip install pymysql requests && flask run"
+    ports:
+      - "5000:5000"
+    networks:
+      - inflation_network
+
+  agents:
+    image: python:3.11-slim
+    container_name: inflation_agents
+    working_dir: /app/services/agents
+    volumes:
+      - ./:/app
+    environment:
+      DATABASE_URL: mysql+pymysql://root:root@mysql:3306/inflation_db
+      AGENT_POLL_SECONDS: "300"
+    depends_on:
+      - mysql
+    command: sh -c "pip install -r /app/backend/requirements.txt && pip install pymysql requests && python agents_service.py"
+    networks:
+      - inflation_network
+
+  jobs:
+    image: python:3.11-slim
+    container_name: inflation_jobs
+    working_dir: /app/services/jobs
+    volumes:
+      - ./:/app
+    environment:
+      DATABASE_URL: mysql+pymysql://root:root@mysql:3306/inflation_db
+    depends_on:
+      - mysql
+    # boucle simple: calcule les agrégats toutes les 5 minutes
+    command: sh -c "pip install -r /app/backend/requirements.txt && pip install pymysql requests && while true; do python transforms.py; sleep 300; done"
+    networks:
+      - inflation_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: inflation_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+    networks:
+      - inflation_network
+
+volumes:
+  db_data:
+
+networks:
+  inflation_network:
+    driver: bridge
