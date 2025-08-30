@@ -138,7 +138,7 @@
           <button class="text-gray-600 hover:text-gray-800">
             <i class="fas fa-cog text-xl"></i>
           </button>
-          <button id="logoutTop" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded" onclick="window.location.href='login.html'">Déconnexion</button>
+          <button id="logoutTop" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded" onclick="performLogout()">Déconnexion</button>
         </div>
       </div>
     </header>
@@ -595,17 +595,27 @@
       }).length;
     }
 
+    // Logout unifié: nettoie le stockage et redirige vers login
+    function performLogout() {
+      try { sessionStorage && sessionStorage.clear && sessionStorage.clear(); } catch (e) {}
+      try {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('token');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userFirstName');
+        localStorage.removeItem('userLastName');
+      } catch (e) {}
+      window.location.replace('login.html');
+    }
+
     // Déconnexion (sidebar)
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-        window.location.href = 'login.html';
-      }
-    });
+    document.getElementById('logoutBtn').addEventListener('click', performLogout);
 
     // Déconnexion (top header)
-    document.getElementById('logoutTop').addEventListener('click', () => {
-      window.location.href = 'login.html';
-    });
+    document.getElementById('logoutTop').addEventListener('click', performLogout);
 
     // Initialisation
     updateStats();

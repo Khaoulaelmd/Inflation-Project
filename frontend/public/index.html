@@ -1389,13 +1389,18 @@
 
     function logout() {
       // Effacer les données de connexion
+      try { sessionStorage && sessionStorage.clear && sessionStorage.clear(); } catch (e) {}
       localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('token');
+      localStorage.removeItem('authToken');
       localStorage.removeItem('userEmail');
       localStorage.removeItem('userRole');
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userFirstName');
+      localStorage.removeItem('userLastName');
       
       // Rediriger vers la page de connexion
-      window.location.href = 'login.html';
+      window.location.replace('login.html');
     }
 
     // Fonction pour rediriger vers la bonne page selon le rôle
