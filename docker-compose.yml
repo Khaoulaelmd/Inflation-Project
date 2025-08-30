@@ -106,7 +106,7 @@ services:
       - ./data/certbot:/var/www/certbot
       - /etc/letsencrypt:/etc/letsencrypt
     entrypoint: "/bin/sh -c"
-    command: "trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew --webroot -w /var/www/certbot --quiet --deploy-hook 'nginx -s reload' || true; done"
+    command: "sleep infinity"
 
 volumes:
   db_data:
