@@ -1298,8 +1298,8 @@
         indicators.forEach(indicator => {
             const card = document.querySelector(`[data-indicator="${indicator.code}"]`);
             if (card) {
-                // Mettre à jour la valeur actuelle
-                const valueElement = card.querySelector('.text-2xl');
+                // Mettre à jour la valeur actuelle (classe réelle: .text-xl)
+                const valueElement = card.querySelector('.text-xl');
                 if (valueElement) {
                     valueElement.textContent = indicator.current_value;
                 }
@@ -1388,11 +1388,25 @@
         }
     }
 
+    // Fallback local si l'API est indisponible
+    function initializeDashboard() {
+      try {
+        rebuildIndicatorSelect();
+        filterKpiCards();
+        updateMainChart();
+        updateMultiChart();
+        updateCausal();
+      } catch (e) {
+        console.warn('Erreur d\'initialisation locale:', e);
+      }
+    }
+
     function logout() {
       // Effacer les données de connexion
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('userEmail');
       localStorage.removeItem('userRole');
+      localStorage.removeItem('token');
       localStorage.removeItem('authToken');
       
       // Rediriger vers la page de connexion
