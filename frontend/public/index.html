@@ -1178,6 +1178,11 @@
     // 11) Navigation & init
     document.querySelectorAll(".nav-item").forEach(btn=>{
       btn.addEventListener("click",()=>{
+        // Rediriger vers la page secondaire pour la section Prévisions
+        if (btn.dataset.section === 'forecast') {
+          window.location.href = 'index2.html';
+          return;
+        }
         document.querySelectorAll("main > section").forEach(s=>s.classList.add("hidden"));
         document.getElementById(btn.dataset.section).classList.remove("hidden");
         document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
